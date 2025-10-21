@@ -15,13 +15,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Object Recognition Story Machine",
   description: "AI-powered object recognition and story generation app",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
-  themeColor: "#3b82f6",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Story Machine",
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#3b82f6",
 };
 
 export default function RootLayout({

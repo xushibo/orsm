@@ -7,10 +7,8 @@ const nextConfig: NextConfig = {
     unoptimized: true
   },
   // 解决 Turbopack 警告
-  experimental: {
-    turbo: {
-      root: '/Users/bo/polyv/1024/object-recognition-story-machine'
-    }
+  turbopack: {
+    root: '/Users/bo/polyv/1024/object-recognition-story-machine'
   }
 };
 

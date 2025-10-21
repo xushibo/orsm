@@ -107,7 +107,7 @@ export const useCamera = () => {
               videoRef.current.play().catch(console.error);
             }
             return;
-          } catch (basicError) {
+          } catch {
             errorMessage = 'Camera access failed with basic settings';
           }
         }
@@ -130,6 +130,7 @@ export const useCamera = () => {
         stream: null,
         error: null,
         isLoading: false,
+        isHttps: state.isHttps,
       });
     }
   };
