@@ -1,0 +1,10 @@
+name = "orsm-ai-worker"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[env.production]
+name = "orsm-ai-worker"
+
+# 环境变量配置
+[vars]
+# 这里可以添加非敏感的环境变量
