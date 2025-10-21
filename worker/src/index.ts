@@ -99,11 +99,11 @@ async function callGeminiAPI(imageFile: File, apiKey: string): Promise<ApiRespon
         }
       ]
     }],
-    generationConfig: {
+    generation_config: {
       temperature: 0.7,
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 1024,
+      top_k: 40,
+      top_p: 0.95,
+      max_output_tokens: 1024,
     }
   };
 
@@ -118,6 +118,9 @@ async function callGeminiAPI(imageFile: File, apiKey: string): Promise<ApiRespon
   if (!response.ok) {
     const errorText = await response.text();
     console.error('Gemini API error:', errorText);
+    console.error('Request body:', JSON.stringify(requestBody, null, 2));
+    console.error('Image size:', base64Image.length);
+    console.error('MIME type:', mimeType);
     throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
   }
 

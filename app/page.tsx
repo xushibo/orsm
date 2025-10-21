@@ -1,7 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { useCamera } from '../src/hooks/use-camera';
 import { CaptureButton } from '../src/components/capture-button';
+
+interface AIResult {
+  word: string;
+  story: string;
+}
 
 export default function Home() {
   const { 
@@ -14,19 +20,28 @@ export default function Home() {
     requestCameraPermission 
   } = useCamera();
 
-  const handleCapture = () => {
+  // 添加状态管理
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [result, setResult] = useState<AIResult | null>(null);
+  const [showResult, setShowResult] = useState(false);
+
+  const handleCapture = async () => {
     if (!videoRef.current || !stream) {
       console.log('Camera not ready');
       return;
     }
 
     try {
+      // 开始处理状态
+      setIsProcessing(true);
+      
       // 创建 canvas 元素来捕获视频帧
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       
       if (!context) {
         console.error('Failed to get canvas context');
+        setIsProcessing(false);
         return;
       }
 
@@ -37,20 +52,58 @@ export default function Home() {
       // 将视频帧绘制到 canvas
       context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-      // 将 canvas 转换为图片
-      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      // 转换为 Blob 用于发送到 Worker
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+        }, 'image/jpeg', 0.8);
+      });
       
       console.log('Photo captured successfully!');
-      console.log('Image data length:', imageData.length);
+      console.log('Image size:', blob.size, 'bytes');
       
-      // 这里可以添加更多的处理逻辑，比如保存图片或发送到服务器
-      // 暂时在控制台显示成功消息
-      alert('Photo captured! Check console for details.');
+      // 发送到 Worker
+      await sendToWorker(blob);
       
     } catch (error) {
       console.error('Failed to capture photo:', error);
+      setIsProcessing(false);
       alert('Failed to capture photo. Please try again.');
     }
+  };
+
+  const sendToWorker = async (imageBlob: Blob) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', imageBlob, 'captured-image.jpg');
+
+      const response = await fetch('https://orsm-ai-worker.xu57.workers.dev', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Worker response:', result);
+      
+      // 设置结果并显示弹窗
+      setResult(result);
+      setShowResult(true);
+      setIsProcessing(false);
+
+    } catch (error) {
+      console.error('Failed to send image to worker:', error);
+      setIsProcessing(false);
+      alert('Failed to process image. Please try again.');
+    }
+  };
+
+  const closeResult = () => {
+    setShowResult(false);
+    setResult(null);
   };
 
   return (
@@ -160,9 +213,76 @@ export default function Home() {
       )}
 
       {/* 拍照按钮 - 只在相机权限被授予时显示 */}
-      {permissionState === 'granted' && (
+      {permissionState === 'granted' && !isProcessing && (
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
           <CaptureButton onCapture={handleCapture} />
+        </div>
+      )}
+
+      {/* 加载动画 */}
+      {isProcessing && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 text-center max-w-sm mx-4">
+            <div className="w-16 h-16 mx-auto mb-4 relative">
+              <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">AI 正在分析...</h3>
+            <p className="text-gray-600">请稍等，我们正在识别物品并创作故事</p>
+          </div>
+        </div>
+      )}
+
+      {/* 结果弹窗 */}
+      {showResult && result && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-30 p-4">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 backdrop-blur-sm rounded-3xl p-8 max-w-md w-full shadow-2xl border border-white/20">
+            {/* 关闭按钮 */}
+            <button
+              onClick={closeResult}
+              className="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* 内容 */}
+            <div className="text-center">
+              {/* 图标 */}
+              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+
+              {/* 英文单词 */}
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">识别结果</h2>
+                <div className="bg-white/60 rounded-xl p-4 border border-white/40">
+                  <span className="text-4xl font-bold text-blue-600">{result.word}</span>
+                </div>
+              </div>
+
+              {/* 故事 */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">为你创作的故事</h3>
+                <div className="bg-white/60 rounded-xl p-4 border border-white/40">
+                  <p className="text-gray-700 leading-relaxed text-left">{result.story}</p>
+                </div>
+              </div>
+
+              {/* 操作按钮 */}
+              <div className="flex gap-3">
+                <button
+                  onClick={closeResult}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg"
+                >
+                  继续拍照
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </main>
