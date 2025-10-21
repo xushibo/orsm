@@ -84,7 +84,7 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 
 # 生产环境
 NEXT_PUBLIC_USE_MOCK=false
-NEXT_PUBLIC_API_BASE_URL=https://orsm-ai-worker.xu57.workers.dev
+NEXT_PUBLIC_API_BASE_URL=https://orsm-ai.xushibo.cn
 ```
 
 ### Cloudflare Worker 配置

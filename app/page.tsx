@@ -82,7 +82,10 @@ export default function Home() {
         size: imageBlob.size,
         type: imageBlob.type,
         retry: retryCount,
-        url: API_CONFIG.baseUrl
+        url: API_CONFIG.baseUrl,
+        environment: process.env.NODE_ENV,
+        useMock: process.env.NEXT_PUBLIC_USE_MOCK,
+        isProduction: process.env.NODE_ENV === 'production'
       });
 
       // 创建 AbortController 用于超时控制

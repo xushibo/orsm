@@ -16,7 +16,7 @@ const configs: Record<string, ApiConfig> = {
     retries: 3
   },
   production: {
-    baseUrl: 'https://orsm-ai-worker.xu57.workers.dev',
+    baseUrl: 'https://orsm-ai.xushibo.cn',
     timeout: 30000,
     retries: 2
   },
@@ -30,6 +30,12 @@ const configs: Record<string, ApiConfig> = {
 export function getApiConfig(): ApiConfig {
   const env = process.env.NODE_ENV || 'development';
   const useMock = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
+  const isProduction = env === 'production';
+  
+  // 在生产环境中，除非明确设置使用模拟，否则使用生产 API
+  if (isProduction && !useMock) {
+    return configs.production;
+  }
   
   if (useMock) {
     return configs.mock;
