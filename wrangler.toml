@@ -1,0 +1,14 @@
+name = "object-recognition-story-machine"
+compatibility_date = "2024-01-01"
+
+[env.production]
+name = "object-recognition-story-machine"
+
+# Cloudflare Pages 配置
+[pages]
+# 构建输出目录
+build_output_dir = "out"
+# 构建命令
+build_command = "npm run build"
+# Node.js 版本
+node_version = "18"
