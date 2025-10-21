@@ -37,7 +37,9 @@ npm run deploy
 
 ### Endpoint
 
-`POST https://your-worker.your-subdomain.workers.dev/`
+**Custom Domain**: `POST https://orsm-ai.xushibo.cn/`
+
+**Worker URL**: `POST https://orsm-ai-worker.your-subdomain.workers.dev/`
 
 ### Request Format
 
@@ -66,9 +68,15 @@ npm run deploy
 
 #### Using curl
 ```bash
+# Using custom domain
 curl -X POST \
   -F "image=@/path/to/your/image.jpg" \
-  https://your-worker.your-subdomain.workers.dev/
+  https://orsm-ai.xushibo.cn/
+
+# Using worker URL
+curl -X POST \
+  -F "image=@/path/to/your/image.jpg" \
+  https://orsm-ai-worker.your-subdomain.workers.dev/
 ```
 
 #### Using JavaScript
@@ -76,7 +84,8 @@ curl -X POST \
 const formData = new FormData();
 formData.append('image', imageFile);
 
-const response = await fetch('https://your-worker.your-subdomain.workers.dev/', {
+// Using custom domain
+const response = await fetch('https://orsm-ai.xushibo.cn/', {
   method: 'POST',
   body: formData
 });

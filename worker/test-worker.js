@@ -3,6 +3,10 @@
 /**
  * Test script for ORSM AI Worker
  * Usage: node test-worker.js <worker-url>
+ * 
+ * Example URLs:
+ * - Custom domain: https://orsm-ai.xushibo.cn/
+ * - Worker URL: https://orsm-ai-worker.your-subdomain.workers.dev/
  */
 
 const fs = require('fs');
@@ -91,7 +95,9 @@ const workerUrl = process.argv[2];
 
 if (!workerUrl) {
   console.log('Usage: node test-worker.js <worker-url>');
-  console.log('Example: node test-worker.js https://orsm-ai-worker.your-subdomain.workers.dev/');
+  console.log('Examples:');
+  console.log('  node test-worker.js https://orsm-ai.xushibo.cn/');
+  console.log('  node test-worker.js https://orsm-ai-worker.your-subdomain.workers.dev/');
   process.exit(1);
 }
 
