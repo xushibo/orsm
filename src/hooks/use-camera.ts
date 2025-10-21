@@ -29,6 +29,14 @@ export const useCamera = () => {
     setState(prev => ({ ...prev, isHttps }));
   }, []);
 
+  // 当 stream 可用时，将其附加到视频元素
+  useEffect(() => {
+    if (state.stream && videoRef.current) {
+      videoRef.current.srcObject = state.stream;
+      videoRef.current.play().catch(console.error);
+    }
+  }, [state.stream]);
+
   const requestCameraPermission = async () => {
     // 检查 HTTPS 环境
     if (!state.isHttps) {
@@ -71,13 +79,6 @@ export const useCamera = () => {
         isHttps: state.isHttps,
       });
 
-      // 将流附加到视频元素
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        // 确保视频播放
-        videoRef.current.play().catch(console.error);
-      }
-
     } catch (error) {
       console.error('Camera access error:', error);
       
@@ -102,10 +103,6 @@ export const useCamera = () => {
               isLoading: false,
               isHttps: state.isHttps,
             });
-            if (videoRef.current) {
-              videoRef.current.srcObject = basicStream;
-              videoRef.current.play().catch(console.error);
-            }
             return;
           } catch {
             errorMessage = 'Camera access failed with basic settings';

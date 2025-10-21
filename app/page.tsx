@@ -15,8 +15,42 @@ export default function Home() {
   } = useCamera();
 
   const handleCapture = () => {
-    // 暂时没有功能，将在 Story 1.4 中实现
-    console.log('Capture button clicked');
+    if (!videoRef.current || !stream) {
+      console.log('Camera not ready');
+      return;
+    }
+
+    try {
+      // 创建 canvas 元素来捕获视频帧
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      
+      if (!context) {
+        console.error('Failed to get canvas context');
+        return;
+      }
+
+      // 设置 canvas 尺寸与视频相同
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+
+      // 将视频帧绘制到 canvas
+      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+      // 将 canvas 转换为图片
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      
+      console.log('Photo captured successfully!');
+      console.log('Image data length:', imageData.length);
+      
+      // 这里可以添加更多的处理逻辑，比如保存图片或发送到服务器
+      // 暂时在控制台显示成功消息
+      alert('Photo captured! Check console for details.');
+      
+    } catch (error) {
+      console.error('Failed to capture photo:', error);
+      alert('Failed to capture photo. Please try again.');
+    }
   };
 
   return (
@@ -29,7 +63,27 @@ export default function Home() {
           playsInline
           muted
           className="absolute inset-0 w-full h-full object-cover"
+          onLoadedMetadata={() => {
+            console.log('Video metadata loaded');
+            console.log('Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
+          }}
+          onCanPlay={() => {
+            console.log('Video can play');
+          }}
+          onError={(e) => {
+            console.error('Video error:', e);
+          }}
         />
+      )}
+
+      {/* 调试信息 */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute top-4 left-4 bg-black/50 text-white text-xs p-2 rounded z-20">
+          <div>Permission: {permissionState}</div>
+          <div>Stream: {stream ? 'Yes' : 'No'}</div>
+          <div>HTTPS: {isHttps ? 'Yes' : 'No'}</div>
+          <div>Loading: {isLoading ? 'Yes' : 'No'}</div>
+        </div>
       )}
 
       {/* HTTPS 检查界面 */}
