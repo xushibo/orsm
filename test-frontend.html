@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Frontend-Backend Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Frontend-Backend Integration Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Direct API Call</h2>
+        <button onclick="testDirectAPI()">Test Direct API Call</button>
+        <div id="directResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Image Upload</h2>
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="testImageUpload()">Upload Image</button>
+        <div id="uploadResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Camera Capture (if available)</h2>
+        <button onclick="testCameraCapture()">Capture from Camera</button>
+        <video id="video" width="320" height="240" style="display: none;"></video>
+        <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+        <div id="cameraResult" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+    </div>
+
+    <script>
+        const API_URL = 'https://orsm-ai-worker.xu57.workers.dev';
+
+        async function testDirectAPI() {
+            showLoading();
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: new FormData() // Empty form data
+                });
+                
+                const result = await response.text();
+                showResult('directResult', `Status: ${response.status}<br>Response: ${result}`);
+            } catch (error) {
+                showResult('directResult', `Error: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function testImageUpload() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showResult('uploadResult', 'Please select an image file first.');
+                return;
+            }
+
+            showLoading();
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                showResult('uploadResult', `Status: ${response.status}<br>Word: ${result.word}<br>Story: ${result.story}`);
+            } catch (error) {
+                showResult('uploadResult', `Error: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function testCameraCapture() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById('video');
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+
+                video.srcObject = stream;
+                video.style.display = 'block';
+                video.play();
+
+                // Wait for video to load
+                video.onloadedmetadata = () => {
+                    // Capture frame after 2 seconds
+                    setTimeout(async () => {
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        // Convert to blob
+                        canvas.toBlob(async (blob) => {
+                            if (blob) {
+                                showLoading();
+                                try {
+                                    const formData = new FormData();
+                                    formData.append('image', blob, 'captured.jpg');
+
+                                    const response = await fetch(API_URL, {
+                                        method: 'POST',
+                                        body: formData
+                                    });
+                                    
+                                    const result = await response.json();
+                                    showResult('cameraResult', `Status: ${response.status}<br>Word: ${result.word}<br>Story: ${result.story}`);
+                                } catch (error) {
+                                    showResult('cameraResult', `Error: ${error.message}`);
+                                } finally {
+                                    hideLoading();
+                                    stream.getTracks().forEach(track => track.stop());
+                                    video.style.display = 'none';
+                                }
+                            }
+                        }, 'image/jpeg', 0.8);
+                    }, 2000);
+                };
+            } catch (error) {
+                showResult('cameraResult', `Camera error: ${error.message}`);
+            }
+        }
+
+        function showResult(elementId, content) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+            element.style.display = 'block';
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
