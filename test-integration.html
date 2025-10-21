@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend-Backend Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .camera-section {
+            text-align: center;
+            padding: 20px;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        canvas {
+            display: none;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .popup-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .word-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #007bff;
+            margin: 20px 0;
+        }
+        .story-display {
+            font-size: 1.2em;
+            line-height: 1.6;
+            color: #333;
+            margin: 20px 0;
+        }
+        .close-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Frontend-Backend Integration Test</h1>
+    
+    <div class="test-container">
+        <h2>📸 Camera Capture Test</h2>
+        <div class="camera-section">
+            <button id="startCamera">Start Camera</button>
+            <button id="captureBtn" disabled>Capture Photo</button>
+            <button id="stopCamera" disabled>Stop Camera</button>
+            
+            <video id="video" autoplay playsInline muted></video>
+            <canvas id="canvas"></canvas>
+            
+            <div id="status">Click "Start Camera" to begin</div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>📊 Test Results</h2>
+        <div id="results"></div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>AI is analyzing your image...</p>
+    </div>
+
+    <div class="popup" id="resultPopup">
+        <div class="popup-content">
+            <h2>🎉 AI Analysis Complete!</h2>
+            <div class="word-display" id="resultWord"></div>
+            <div class="story-display" id="resultStory"></div>
+            <button class="close-btn" onclick="closePopup()">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3001';
+        let stream = null;
+        let isProcessing = false;
+
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('startCamera');
+        const captureBtn = document.getElementById('captureBtn');
+        const stopBtn = document.getElementById('stopCamera');
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        const loading = document.getElementById('loading');
+        const popup = document.getElementById('resultPopup');
+        const resultWord = document.getElementById('resultWord');
+        const resultStory = document.getElementById('resultStory');
+
+        startBtn.addEventListener('click', startCamera);
+        captureBtn.addEventListener('click', capturePhoto);
+        stopBtn.addEventListener('click', stopCamera);
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                
+                video.srcObject = stream;
+                video.play();
+                
+                startBtn.disabled = true;
+                captureBtn.disabled = false;
+                stopBtn.disabled = false;
+                status.textContent = 'Camera started! Click "Capture Photo" to take a picture.';
+                
+                addResult('✅ Camera started successfully');
+            } catch (error) {
+                addResult(`❌ Camera error: ${error.message}`);
+            }
+        }
+
+        async function capturePhoto() {
+            if (!stream || isProcessing) return;
+            
+            try {
+                isProcessing = true;
+                captureBtn.disabled = true;
+                showLoading();
+                
+                // Set canvas size to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Draw video frame to canvas
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Convert to blob
+                const blob = await new Promise((resolve) => {
+                    canvas.toBlob(resolve, 'image/jpeg', 0.8);
+                });
+                
+                addResult(`📸 Photo captured: ${blob.size} bytes`);
+                
+                // Send to backend
+                await sendToBackend(blob);
+                
+            } catch (error) {
+                addResult(`❌ Capture error: ${error.message}`);
+                hideLoading();
+                isProcessing = false;
+                captureBtn.disabled = false;
+            }
+        }
+
+        async function sendToBackend(imageBlob) {
+            try {
+                const formData = new FormData();
+                formData.append('image', imageBlob, 'captured-image.jpg');
+
+                addResult('🚀 Sending to backend...');
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                addResult(`✅ Backend response: ${JSON.stringify(result)}`);
+                
+                // Show result popup
+                showResult(result);
+                
+            } catch (error) {
+                addResult(`❌ Backend error: ${error.message}`);
+                hideLoading();
+                isProcessing = false;
+                captureBtn.disabled = false;
+            }
+        }
+
+        function showResult(result) {
+            resultWord.textContent = result.word;
+            resultStory.textContent = result.story;
+            popup.style.display = 'flex';
+            hideLoading();
+            isProcessing = false;
+            captureBtn.disabled = false;
+        }
+
+        function closePopup() {
+            popup.style.display = 'none';
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                video.srcObject = null;
+                
+                startBtn.disabled = false;
+                captureBtn.disabled = true;
+                stopBtn.disabled = true;
+                status.textContent = 'Camera stopped.';
+                
+                addResult('🛑 Camera stopped');
+            }
+        }
+
+        function showLoading() {
+            loading.style.display = 'block';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        function addResult(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const resultDiv = document.createElement('div');
+            resultDiv.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            results.appendChild(resultDiv);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        // Test backend connectivity on page load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                addResult(`🔗 Backend connected: ${data.status}`);
+            } catch (error) {
+                addResult(`❌ Backend connection failed: ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

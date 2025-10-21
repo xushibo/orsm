@@ -59,26 +59,13 @@ export default {
         });
       }
 
-      // 临时返回模拟数据来测试前端功能
-      console.log('Received image:', imageFile.name, imageFile.size, 'bytes');
+      // 调用 Gemini API
+      const result = await callGeminiAPI(imageFile, env.GEMINI_API_KEY);
       
-      // 模拟 AI 响应
-      const mockResult = {
-        word: "Apple",
-        story: "A red apple sits on the table. The apple is sweet and crunchy, perfect for a healthy snack!"
-      };
-      
-      return new Response(JSON.stringify(mockResult), {
+      return new Response(JSON.stringify(result), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
-
-      // 注释掉真实的 Gemini API 调用，先测试前端功能
-      // const result = await callGeminiAPI(imageFile, env.GEMINI_API_KEY);
-      // return new Response(JSON.stringify(result), {
-      //   status: 200,
-      //   headers: { 'Content-Type': 'application/json' }
-      // });
 
     } catch (error) {
       console.error('Worker error:', error);
@@ -114,7 +101,7 @@ async function callGeminiAPI(imageFile: File, apiKey: string): Promise<ApiRespon
     }]
   };
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

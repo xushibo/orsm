@@ -77,7 +77,7 @@ export default function Home() {
       const formData = new FormData();
       formData.append('image', imageBlob, 'captured-image.jpg');
 
-      const response = await fetch('https://orsm-ai-worker.xu57.workers.dev', {
+      const response = await fetch('http://localhost:3001', {
         method: 'POST',
         body: formData
       });
