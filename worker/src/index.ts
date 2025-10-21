@@ -2,6 +2,12 @@ export interface Env {
   // Cloudflare Workers AI 不需要 API 密钥
 }
 
+// 添加 ExecutionContext 类型定义
+interface ExecutionContext {
+  waitUntil(promise: Promise<any>): void;
+  passThroughOnException(): void;
+}
+
 interface ApiResponse {
   word: string;
   story: string;

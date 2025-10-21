@@ -32,6 +32,11 @@ export default function Home() {
       return;
     }
 
+    console.log('=== CAPTURE STARTED ===');
+    console.log('API Config:', API_CONFIG);
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Use Mock:', process.env.NEXT_PUBLIC_USE_MOCK);
+
     try {
       // 开始处理状态
       setIsProcessing(true);
@@ -92,6 +97,14 @@ export default function Home() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
 
+      console.log('Making request to:', API_CONFIG.baseUrl);
+      console.log('Request details:', {
+        method: 'POST',
+        url: API_CONFIG.baseUrl,
+        bodyType: 'FormData',
+        timeout: API_CONFIG.timeout
+      });
+
       const response = await fetch(API_CONFIG.baseUrl, {
         method: 'POST',
         body: formData,
@@ -99,6 +112,13 @@ export default function Home() {
       });
 
       clearTimeout(timeoutId);
+      
+      console.log('Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        url: response.url
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
