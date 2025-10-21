@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useCamera } from '../src/hooks/use-camera';
 import { CaptureButton } from '../src/components/capture-button';
+import { API_CONFIG } from '../src/config/api';
 
 interface AIResult {
   word: string;
@@ -72,22 +73,42 @@ export default function Home() {
     }
   };
 
-  const sendToWorker = async (imageBlob: Blob) => {
+  const sendToWorker = async (imageBlob: Blob, retryCount = 0) => {
     try {
       const formData = new FormData();
       formData.append('image', imageBlob, 'captured-image.jpg');
 
-      const response = await fetch('http://localhost:3001', {
-        method: 'POST',
-        body: formData
+      console.log('Sending image to backend:', {
+        size: imageBlob.size,
+        type: imageBlob.type,
+        retry: retryCount,
+        url: API_CONFIG.baseUrl
       });
 
+      // 创建 AbortController 用于超时控制
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
+
+      const response = await fetch(API_CONFIG.baseUrl, {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('Worker response:', result);
+      console.log('Backend response:', result);
+      
+      // 验证响应格式
+      if (!result.word || !result.story) {
+        throw new Error('Invalid response format from backend');
+      }
       
       // 设置结果并显示弹窗
       setResult(result);
@@ -95,9 +116,30 @@ export default function Home() {
       setIsProcessing(false);
 
     } catch (error) {
-      console.error('Failed to send image to worker:', error);
+      console.error('Failed to send image to backend:', error);
+      
+      // 重试逻辑
+      if (retryCount < API_CONFIG.retries && !(error instanceof Error && error.name === 'AbortError')) {
+        console.log(`Retrying... (${retryCount + 1}/${API_CONFIG.retries})`);
+        setTimeout(() => {
+          sendToWorker(imageBlob, retryCount + 1);
+        }, 1000 * (retryCount + 1)); // 递增延迟
+        return;
+      }
+      
       setIsProcessing(false);
-      alert('Failed to process image. Please try again.');
+      
+      // 显示更友好的错误信息
+      let errorMessage = 'Unknown error occurred';
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Request timeout. Please check your connection and try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      alert(`Failed to process image: ${errorMessage}\n\nPlease try again.`);
     }
   };
 

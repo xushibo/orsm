@@ -8,7 +8,13 @@
     "export": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "npm run build && wrangler pages deploy out"
+    "deploy": "npm run build && wrangler pages deploy out",
+    "deploy:frontend": "npm run build && wrangler pages deploy out",
+    "deploy:backend": "cd worker && wrangler deploy",
+    "deploy:all": "./scripts/deploy.sh --all",
+    "deploy:production": "./scripts/deploy.sh --all --production",
+    "test:integration": "node mock-server.js & npm run dev",
+    "test:api": "curl -X POST -F 'image=@test-images/test.png' http://localhost:3001"
   },
   "dependencies": {
     "cors": "^2.8.5",
