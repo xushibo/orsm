@@ -59,24 +59,50 @@ export default {
         imageFileName: imageFile?.name
       });
 
+      // 验证图片文件是否存在
       if (!imageFile) {
         console.error('No image file provided');
         return new Response(JSON.stringify({ error: 'No image file provided' }), {
           status: 400,
           headers: { 
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS'
           }
         });
       }
 
+      // 验证文件大小
+      if (imageFile.size === 0) {
+        console.error('Image file is empty');
+        return new Response(JSON.stringify({ error: 'Image file is empty' }), {
+          status: 400,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS'
+          }
+        });
+      }
+
+      // 验证文件大小不要太小（移动端最小10KB）
+      if (imageFile.size < 10000) {
+        console.warn('Image file is very small:', imageFile.size, 'bytes');
+        // 不阻止，只是警告
+      }
+
       // 验证文件类型
       if (!imageFile.type.startsWith('image/')) {
+        console.error('Invalid file type:', imageFile.type);
         return new Response(JSON.stringify({ error: 'Invalid file type. Please upload an image.' }), {
           status: 400,
           headers: { 
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS'
           }
         });
       }
@@ -302,34 +328,9 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
       });
     }
 
-    // AI 识别失败，尝试使用简单的回退
-    console.log('AI recognition failed, using intelligent fallback');
-    
-    // 基于图片特征生成一个智能的默认响应
-    const imageSize = imageFile.size;
-    const imageType = imageFile.type;
-    const timestamp = Date.now();
-    
-    // 使用图片特征生成一个"智能"的默认响应
-    const fallbackObjects = [
-      'Object', 'Item', 'Thing', 'Picture', 'Image', 'Photo', 'View', 'Scene'
-    ];
-    
-    const hash = (imageSize + timestamp) % fallbackObjects.length;
-    const fallbackWord = fallbackObjects[hash];
-    
-    console.log('Using intelligent fallback:', { 
-      imageSize, 
-      imageType, 
-      timestamp, 
-      hash, 
-      fallbackWord 
-    });
-    
-    return {
-      word: fallbackWord,
-      story: `I can see something interesting in this picture. It's a wonderful ${fallbackWord.toLowerCase()} that tells its own story.`
-    };
+    // AI 识别失败，不使用fallback，直接抛出错误
+    console.error('AI recognition failed - no valid object identified');
+    throw new Error('AI failed to identify any object in the image. Please try again with a clearer photo.');
 
   } catch (aiError) {
     console.error('Real AI call failed:', aiError);
