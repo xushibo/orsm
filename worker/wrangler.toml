@@ -10,6 +10,10 @@ zone_name = "xushibo.cn"
 [env.production]
 name = "orsm-ai-worker"
 
+# AI 绑定配置
+[ai]
+binding = "AI"
+
 # 环境变量配置
 [vars]
 # 这里可以添加非敏感的环境变量
