@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from 'react';
 import { MobileCaptureButton } from './MobileCaptureButton';
 import { MobileResultModal } from './MobileResultModal';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
-import { captureImageFromVideo, validateImageQuality } from '@/src/utils/image-processor';
+// import { captureImageFromVideo, validateImageQuality } from '@/src/utils/image-processor';
 import { applySafariVideoFixes, waitForSafariVideoReady, getSafariOptimizedConstraints, getFallbackConstraints } from '@/src/utils/safari-compatibility';
 import { logDeviceInfo } from '@/src/utils/device-detector';
 import { API_CONFIG } from '@/src/config/api';
@@ -101,20 +101,68 @@ export function MobileCamera() {
       setIsProcessing(true);
       console.log('=== Starting capture ===');
 
-      // 使用改进的图片捕获
-      const blob = await captureImageFromVideo(videoRef.current, {
-        quality: 0.92,
-        maxWidth: 1920,
-        maxHeight: 1080,
-        enhanceContrast: true,
-        format: 'image/jpeg',
+      // 使用和debug-mobile.html相同的简单方式
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      
+      if (!context) {
+        throw new Error('Failed to get canvas context');
+      }
+
+      // 检查视频尺寸
+      const videoWidth = videoRef.current.videoWidth;
+      const videoHeight = videoRef.current.videoHeight;
+      
+      console.log('Video dimensions check:', {
+        videoWidth,
+        videoHeight,
+        clientWidth: videoRef.current.clientWidth,
+        clientHeight: videoRef.current.clientHeight,
+        readyState: videoRef.current.readyState
+      });
+      
+      // 如果视频尺寸为 0，使用视频元素的显示尺寸
+      let canvasWidth = videoWidth;
+      let canvasHeight = videoHeight;
+      
+      if (videoWidth === 0 || videoHeight === 0) {
+        console.warn('Video dimensions are 0, using element dimensions');
+        canvasWidth = videoRef.current.clientWidth || 720;
+        canvasHeight = videoRef.current.clientHeight || 1280;
+      }
+      
+      // 设置 canvas 尺寸
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+      // 将视频帧绘制到 canvas
+      context.drawImage(videoRef.current, 0, 0, canvasWidth, canvasHeight);
+      
+      console.log('Canvas drawing completed:', {
+        canvasWidth,
+        canvasHeight,
+        videoWidth: videoRef.current.videoWidth,
+        videoHeight: videoRef.current.videoHeight
       });
 
-      // 验证图片质量（更宽松的检查）
-      if (!validateImageQuality(blob, 1000)) {
-        console.warn('Image quality check failed, but continuing anyway');
-        // 不抛出错误，继续处理
-      }
+      // 转换为 Blob（使用和debug-mobile.html相同的质量）
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+        }, 'image/jpeg', 0.9); // 使用和debug-mobile.html相同的质量
+      });
+
+      console.log('=== Mobile Image Details ===');
+      console.log('Image size:', blob.size, 'bytes');
+      console.log('Image type:', blob.type);
+      console.log('Canvas dimensions:', `${canvasWidth}x${canvasHeight}`);
+      console.log('Video dimensions:', {
+        videoWidth: videoRef.current.videoWidth,
+        videoHeight: videoRef.current.videoHeight,
+        clientWidth: videoRef.current.clientWidth,
+        clientHeight: videoRef.current.clientHeight
+      });
+      console.log('===========================');
 
       console.log('Image captured, sending to API...');
 

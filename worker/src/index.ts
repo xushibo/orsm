@@ -150,6 +150,20 @@ async function callCloudflareAI(imageFile: File, env: Env): Promise<ApiResponse>
 
     // 使用 Cloudflare Workers AI 进行真实的图像识别
     console.log('Using Cloudflare Workers AI for real image recognition');
+    console.log('=== IMAGE FILE DETAILS ===');
+    console.log('Image file name:', imageFile.name);
+    console.log('Image file size:', imageFile.size, 'bytes');
+    console.log('Image file type:', imageFile.type);
+    console.log('Image file lastModified:', imageFile.lastModified);
+    console.log('Image file constructor:', imageFile.constructor.name);
+    console.log('Image file instanceof File:', imageFile instanceof File);
+    console.log('Image file instanceof Blob:', imageFile instanceof Blob);
+    
+    // 检查图片内容
+    const arrayBuffer = await imageFile.arrayBuffer();
+    console.log('Image arrayBuffer length:', arrayBuffer.byteLength);
+    console.log('Image first 20 bytes:', Array.from(new Uint8Array(arrayBuffer.slice(0, 20))));
+    
     return await callRealAI(imageFile, env);
 
   } catch (error) {
@@ -201,7 +215,7 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
           console.log('Attempting @cf/microsoft/resnet-50 for image classification...');
           aiResponse = await env.AI.run('@cf/microsoft/resnet-50', {
             image: imageBytes,
-            top_k: 5
+            top_k: 10
           });
           console.log('ResNet-50 response:', JSON.stringify(aiResponse, null, 2));
         } catch (resnetError) {
@@ -246,7 +260,7 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
         });
         
         // 如果置信度太低，尝试使用前几个结果
-        if (confidence < 0.1 && aiResponse.length > 1) {
+        if (confidence < 0.05 && aiResponse.length > 1) {
           for (let i = 1; i < Math.min(aiResponse.length, 3); i++) {
             const result = aiResponse[i];
             const altName = result.label || result.class_name || result.name || result.text;

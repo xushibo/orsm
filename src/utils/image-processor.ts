@@ -100,17 +100,28 @@ function enhanceImage(
     const imageData = context.getImageData(0, 0, width, height);
     const data = imageData.data;
 
-    // 简单的对比度增强
-    const factor = 1.2; // 对比度因子
+    console.log('Starting image enhancement for mobile Safari');
+    console.log('Image dimensions:', width, 'x', height);
+    console.log('Pixel data length:', data.length);
+
+    // 更强的对比度增强，适合移动端图片
+    const factor = 1.4; // 增加对比度因子
+    const brightness = 10; // 增加亮度
+    
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = Math.min(255, data[i] * factor);     // R
-      data[i + 1] = Math.min(255, data[i + 1] * factor); // G
-      data[i + 2] = Math.min(255, data[i + 2] * factor); // B
+      // 增强对比度
+      const r = Math.min(255, Math.max(0, (data[i] - 128) * factor + 128 + brightness));
+      const g = Math.min(255, Math.max(0, (data[i + 1] - 128) * factor + 128 + brightness));
+      const b = Math.min(255, Math.max(0, (data[i + 2] - 128) * factor + 128 + brightness));
+      
+      data[i] = r;
+      data[i + 1] = g;
+      data[i + 2] = b;
       // Alpha channel (data[i + 3]) remains unchanged
     }
 
     context.putImageData(imageData, 0, 0);
-    console.log('Image enhancement applied');
+    console.log('Enhanced image enhancement applied for mobile Safari');
   } catch (error) {
     console.warn('Image enhancement failed:', error);
     // 如果增强失败，继续使用原图
@@ -173,6 +184,13 @@ export async function captureImageFromVideo(
     canvas.toBlob(
       (blob) => {
         if (blob) {
+          console.log('Canvas toBlob result:', {
+            size: blob.size,
+            type: blob.type,
+            quality: opts.quality,
+            dimensions: `${canvas.width}x${canvas.height}`,
+            format: opts.format
+          });
           resolve(blob);
         } else {
           reject(new Error('Failed to create blob from canvas'));
