@@ -366,13 +366,20 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
       });
     }
 
-    // AI 识别失败，不使用fallback，直接抛出错误
+    // AI 识别失败，返回一个友好的错误响应而不是抛出错误
     console.error('AI recognition failed - no valid object identified');
-    throw new Error('AI failed to identify any object in the image. Please try again with a clearer photo.');
+    return {
+      word: "Unknown",
+      story: "I'm sorry, but I couldn't clearly identify what's in this picture. Please try taking a clearer photo with better lighting and make sure the object is clearly visible."
+    };
 
   } catch (aiError) {
     console.error('Real AI call failed:', aiError);
-    throw aiError;
+    // 返回错误响应而不是抛出错误
+    return {
+      word: "Error",
+      story: "I encountered an error while trying to identify the object in this picture. Please try again with a different photo."
+    };
   }
 }
 
