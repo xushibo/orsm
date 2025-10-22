@@ -201,58 +201,51 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
     
     // 尝试AI模型识别
     let aiResult = null;
-    try {
-      console.log('=== Attempting AI Classification ===');
-      console.log('AI binding available:', !!env.AI);
+    console.log('=== Attempting AI Classification ===');
+    console.log('AI binding available:', !!env.AI);
+    
+    // 首先尝试ResNet-50
+    console.log('Trying ResNet-50...');
+    const resnetResponse = await env.AI.run('@cf/microsoft/resnet-50', {
+      image: imageBytes,
+      top_k: 5
+    }).catch(err => {
+      console.log('ResNet-50 failed:', err);
+      return null;
+    });
+    
+    if (resnetResponse && Array.isArray(resnetResponse) && resnetResponse.length > 0) {
+      console.log('ResNet-50 response:', JSON.stringify(resnetResponse, null, 2));
+      const topResult = resnetResponse[0];
+      const objectName = topResult.label || topResult.class_name || topResult.name;
+      const confidence = topResult.score || topResult.confidence || 0;
       
-      // 首先尝试ResNet-50
-      try {
-        console.log('Trying ResNet-50...');
-        const resnetResponse = await env.AI.run('@cf/microsoft/resnet-50', {
-          image: imageBytes,
-          top_k: 5
-        });
-        console.log('ResNet-50 response:', JSON.stringify(resnetResponse, null, 2));
-        
-        if (resnetResponse && Array.isArray(resnetResponse) && resnetResponse.length > 0) {
-          const topResult = resnetResponse[0];
-          const objectName = topResult.label || topResult.class_name || topResult.name;
-          const confidence = topResult.score || topResult.confidence || 0;
-          
-          if (objectName && confidence > 0.1) {
-            console.log('ResNet-50 success:', { objectName, confidence });
-            aiResult = { objectName, confidence, source: 'resnet' };
-          }
-        }
-      } catch (resnetError) {
-        console.log('ResNet-50 failed:', resnetError);
+      if (objectName && confidence > 0.1) {
+        console.log('ResNet-50 success:', { objectName, confidence });
+        aiResult = { objectName, confidence, source: 'resnet' };
       }
+    }
+    
+    // 如果ResNet-50失败，尝试CLIP
+    if (!aiResult) {
+      console.log('Trying CLIP...');
+      const clipResponse = await env.AI.run('@cf/meta/clip', {
+        image: imageBytes,
+        text: "a photo of an object"
+      }).catch(err => {
+        console.log('CLIP failed:', err);
+        return null;
+      });
       
-      // 如果ResNet-50失败，尝试CLIP
-      if (!aiResult) {
-        try {
-          console.log('Trying CLIP...');
-          const clipResponse = await env.AI.run('@cf/meta/clip', {
-            image: imageBytes,
-            text: "a photo of an object"
-          });
-          console.log('CLIP response:', JSON.stringify(clipResponse, null, 2));
-          
-          if (clipResponse && typeof clipResponse === 'object') {
-            const similarity = clipResponse.similarity || clipResponse.score || 0;
-            if (similarity > 0.1) {
-              const objectName = 'Object'; // CLIP返回相似度，我们使用通用名称
-              console.log('CLIP success:', { objectName, similarity });
-              aiResult = { objectName, confidence: similarity, source: 'clip' };
-            }
-          }
-        } catch (clipError) {
-          console.log('CLIP failed:', clipError);
+      if (clipResponse && typeof clipResponse === 'object') {
+        console.log('CLIP response:', JSON.stringify(clipResponse, null, 2));
+        const similarity = clipResponse.similarity || clipResponse.score || 0;
+        if (similarity > 0.1) {
+          const objectName = 'Object'; // CLIP返回相似度，我们使用通用名称
+          console.log('CLIP success:', { objectName, similarity });
+          aiResult = { objectName, confidence: similarity, source: 'clip' };
         }
       }
-      
-    } catch (aiError) {
-      console.log('All AI models failed:', aiError);
     }
     
     // 如果AI识别成功，生成故事
@@ -273,23 +266,11 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
       }
     }
     
-    // AI识别失败，使用智能回退
-    console.log('AI recognition failed, using intelligent fallback');
-    const fallbackObjects = [
-      'Bird', 'Cat', 'Dog', 'Car', 'Book', 'Phone', 'Cup', 'Apple', 'Tree', 'House',
-      'Ball', 'Toy', 'Hat', 'Shoe', 'Chair', 'Table', 'Lamp', 'Clock', 'Key', 'Bag'
-    ];
-    
-    const imageSize = imageFile.size;
-    const timestamp = Date.now();
-    const hash = (imageSize + timestamp) % fallbackObjects.length;
-    const fallbackObject = fallbackObjects[hash];
-    
-    console.log('Using fallback object:', { fallbackObject, hash, imageSize, timestamp });
-    
+    // AI识别失败，返回Unknown
+    console.log('AI recognition failed - no valid object identified');
     return {
-      word: fallbackObject,
-      story: `I can see a ${fallbackObject.toLowerCase()} in this picture. It's something interesting that tells its own story.`
+      word: "Unknown",
+      story: "I'm sorry, but I couldn't clearly identify what's in this picture. Please try taking a clearer photo with better lighting and make sure the object is clearly visible."
     };
 
   } catch (error) {
