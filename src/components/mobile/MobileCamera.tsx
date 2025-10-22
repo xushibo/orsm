@@ -51,16 +51,26 @@ export function MobileCamera() {
       setPermissionState('granted');
       setError(null);
 
-      // 应用Safari修复
-      if (videoRef.current) {
-        applySafariVideoFixes(videoRef.current);
-        videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
-        
-        // 等待视频准备就绪
-        await waitForSafariVideoReady(videoRef.current);
-        console.log('Video is ready');
-      }
+        // 应用Safari修复
+        if (videoRef.current) {
+          applySafariVideoFixes(videoRef.current);
+          videoRef.current.srcObject = mediaStream;
+          
+          try {
+            await videoRef.current.play();
+            console.log('Video playback started');
+          } catch (playError) {
+            console.warn('Video play failed, but continuing:', playError);
+          }
+          
+          // 等待视频准备就绪（不阻塞）
+          try {
+            await waitForSafariVideoReady(videoRef.current);
+            console.log('Video is ready');
+          } catch (readyError) {
+            console.warn('Video ready check failed, but continuing:', readyError);
+          }
+        }
     } catch (err) {
       console.error('Camera access error:', err);
       setPermissionState('denied');

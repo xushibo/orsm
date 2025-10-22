@@ -30,25 +30,42 @@ const DEFAULT_OPTIONS: CaptureOptions = {
  * 等待视频元素完全就绪
  */
 async function waitForVideoReady(video: HTMLVideoElement): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const timeout = setTimeout(() => {
-      reject(new Error('Video ready timeout'));
-    }, 5000);
+      console.warn('Video ready timeout, proceeding anyway');
+      resolve(); // 不抛出错误，继续执行
+    }, 8000); // 增加超时时间
 
     const checkReady = () => {
-      if (video.readyState >= 3) {
-        // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA
+      console.log('Video ready state check:', {
+        readyState: video.readyState,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight
+      });
+
+      // 降低要求：readyState >= 2 就可以继续
+      if (video.readyState >= 2) {
         clearTimeout(timeout);
         resolve();
-      } else {
-        video.addEventListener('canplay', () => {
-          clearTimeout(timeout);
-          resolve();
-        }, { once: true });
       }
     };
 
+    // 立即检查
     checkReady();
+
+    // 如果还没准备好，监听多个事件
+    if (video.readyState < 2) {
+      const events = ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough', 'playing'];
+      
+      const handler = () => {
+        console.log('Video event received, checking ready state');
+        checkReady();
+      };
+
+      events.forEach(event => {
+        video.addEventListener(event, handler, { once: true });
+      });
+    }
   });
 }
 

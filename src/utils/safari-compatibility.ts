@@ -94,17 +94,28 @@ export function applySafariVideoFixes(video: HTMLVideoElement): void {
  */
 export async function waitForSafariVideoReady(
   video: HTMLVideoElement,
-  timeout: number = 5000
+  timeout: number = 10000  // 增加超时时间到10秒
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const timeoutId = setTimeout(() => {
-      reject(new Error('Safari video ready timeout'));
+      console.warn('Safari video ready timeout, proceeding anyway');
+      // 不抛出错误，而是继续执行
+      resolve();
     }, timeout);
 
     const checkReady = () => {
-      // Safari需要readyState >= 3 (HAVE_FUTURE_DATA)
-      if (video.readyState >= 3 && video.videoWidth > 0 && video.videoHeight > 0) {
+      console.log('Checking video ready state:', {
+        readyState: video.readyState,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+        clientWidth: video.clientWidth,
+        clientHeight: video.clientHeight
+      });
+
+      // 降低要求：只要readyState >= 2 (HAVE_CURRENT_DATA) 就认为可以继续
+      if (video.readyState >= 2) {
         clearTimeout(timeoutId);
+        console.log('Video is ready to proceed');
         resolve();
       }
     };
@@ -113,19 +124,22 @@ export async function waitForSafariVideoReady(
     checkReady();
 
     // 如果还没准备好，监听事件
-    if (video.readyState < 3 || video.videoWidth === 0) {
-      const events = ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough'];
+    if (video.readyState < 2) {
+      const events = ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough', 'playing'];
       
       const handler = () => {
+        console.log('Video event triggered:', event);
         checkReady();
-        if (video.readyState >= 3 && video.videoWidth > 0) {
+        if (video.readyState >= 2) {
           events.forEach(event => video.removeEventListener(event, handler));
           clearTimeout(timeoutId);
           resolve();
         }
       };
 
-      events.forEach(event => video.addEventListener(event, handler));
+      events.forEach(event => {
+        video.addEventListener(event, handler, { once: true });
+      });
     }
   });
 }
