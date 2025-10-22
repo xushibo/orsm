@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCamera } from '../src/hooks/use-camera';
 import { CaptureButton } from '../src/components/capture-button';
 import { API_CONFIG } from '../src/config/api';
@@ -228,6 +228,41 @@ export default function Home() {
     setResult(null);
     setIsSpeaking(false);
   };
+
+  // 移动端安全区域处理
+  useEffect(() => {
+    const updateSafeArea = () => {
+      const buttonContainer = document.querySelector('.bottom-button-container') as HTMLElement;
+      if (buttonContainer) {
+        // 获取安全区域值
+        const safeAreaBottom = getComputedStyle(document.documentElement)
+          .getPropertyValue('--safe-area-inset-bottom') || '0px';
+        
+        // 如果没有 CSS 变量，尝试从环境变量获取
+        if (safeAreaBottom === '0px') {
+          const envSafeArea = getComputedStyle(document.documentElement)
+            .getPropertyValue('env(safe-area-inset-bottom)') || '0px';
+          
+          if (envSafeArea !== '0px') {
+            buttonContainer.style.paddingBottom = `calc(2rem + ${envSafeArea})`;
+            buttonContainer.style.minHeight = `calc(80px + ${envSafeArea})`;
+          }
+        }
+      }
+    };
+
+    // 初始设置
+    updateSafeArea();
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', updateSafeArea);
+    window.addEventListener('orientationchange', updateSafeArea);
+    
+    return () => {
+      window.removeEventListener('resize', updateSafeArea);
+      window.removeEventListener('orientationchange', updateSafeArea);
+    };
+  }, []);
 
   return (
     <main className="relative w-full h-screen overflow-hidden bg-black no-zoom">

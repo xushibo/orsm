@@ -46,8 +46,24 @@ body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
-  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
-  min-height: calc(80px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 2rem;
+  min-height: 80px;
+}
+
+/* 支持安全区域的浏览器 */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .bottom-button-container {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    min-height: calc(80px + env(safe-area-inset-bottom));
+  }
+}
+
+/* iOS Safari 特殊处理 */
+@supports (-webkit-touch-callout: none) {
+  .bottom-button-container {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 2rem));
+    min-height: calc(80px + env(safe-area-inset-bottom, 80px));
+  }
 }
 
 /* 移动端触摸优化 */
