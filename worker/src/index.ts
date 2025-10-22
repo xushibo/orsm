@@ -211,42 +211,62 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
       // 尝试使用图像分类模型
       let aiResponse;
       try {
-        console.log('Attempting ResNet-50 classification...');
+        console.log('=== Starting AI Classification ===');
         console.log('Image bytes length:', imageBytes.length);
         console.log('AI binding available:', !!env.AI);
         console.log('AI binding type:', typeof env.AI);
         
-        // 使用 ResNet-50 进行图像分类
-        aiResponse = await env.AI.run('@cf/microsoft/resnet-50', {
-          image: imageBytes
-        });
-        console.log('ResNet-50 response:', JSON.stringify(aiResponse, null, 2));
-      } catch (resnetError) {
-        console.log('ResNet-50 failed:', resnetError);
-        console.log('ResNet error details:', {
-          name: (resnetError as any)?.name,
-          message: (resnetError as any)?.message,
-          stack: (resnetError as any)?.stack
-        });
-        
-        // 如果ResNet-50失败，尝试使用其他图像分类模型
+        // 首先尝试使用更通用的图像分类模型
         try {
-          console.log('Attempting CLIP classification...');
-          // 尝试使用 CLIP 模型
-          aiResponse = await env.AI.run('@cf/meta/clip', {
-            image: imageBytes,
-            text: "a photo of"
+          console.log('Attempting @cf/meta/llama-2-7b-chat-int8 for image description...');
+          aiResponse = await env.AI.run('@cf/meta/llama-2-7b-chat-int8', {
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: "Look at this image and tell me what object you see. Respond with just the object name, nothing else."
+                  },
+                  {
+                    type: "image",
+                    image: imageBytes
+                  }
+                ]
+              }
+            ]
           });
-          console.log('CLIP response:', JSON.stringify(aiResponse, null, 2));
-        } catch (clipError) {
-          console.log('CLIP also failed:', clipError);
-          console.log('CLIP error details:', {
-            name: (clipError as any)?.name,
-            message: (clipError as any)?.message,
-            stack: (clipError as any)?.stack
-          });
-          throw resnetError; // 抛出原始错误
+          console.log('Llama-2 response:', JSON.stringify(aiResponse, null, 2));
+        } catch (llamaError) {
+          console.log('Llama-2 failed, trying ResNet-50:', llamaError);
+          
+          // 如果Llama失败，尝试ResNet-50
+          try {
+            console.log('Attempting ResNet-50 classification...');
+            aiResponse = await env.AI.run('@cf/microsoft/resnet-50', {
+              image: imageBytes
+            });
+            console.log('ResNet-50 response:', JSON.stringify(aiResponse, null, 2));
+          } catch (resnetError) {
+            console.log('ResNet-50 failed, trying CLIP:', resnetError);
+            
+            // 如果ResNet-50也失败，尝试CLIP
+            try {
+              console.log('Attempting CLIP classification...');
+              aiResponse = await env.AI.run('@cf/meta/clip', {
+                image: imageBytes,
+                text: "a photo of"
+              });
+              console.log('CLIP response:', JSON.stringify(aiResponse, null, 2));
+            } catch (clipError) {
+              console.log('All AI models failed:', clipError);
+              throw new Error('All AI models failed to process the image');
+            }
+          }
         }
+      } catch (allModelsError) {
+        console.error('All AI model attempts failed:', allModelsError);
+        throw allModelsError;
       }
       
       console.log('AI classification response:', JSON.stringify(aiResponse, null, 2));
@@ -255,13 +275,15 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
       let objectName = null;
       let confidence = 0;
       
+      console.log('Parsing AI response:', JSON.stringify(aiResponse, null, 2));
+      
       if (aiResponse && Array.isArray(aiResponse) && aiResponse.length > 0) {
         // ResNet-50 或 CLIP 响应格式
         const topResult = aiResponse[0];
         objectName = topResult.label || topResult.class_name || topResult.name || topResult.text;
         confidence = topResult.score || topResult.confidence || topResult.similarity || 0;
         
-        console.log('ResNet classification result:', { 
+        console.log('Array-based classification result:', { 
           objectName, 
           confidence, 
           fullResult: topResult 
@@ -281,27 +303,43 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
             }
           }
         }
-      } else if (aiResponse && (aiResponse.response || aiResponse.description)) {
-        // Llama 响应格式
-        const responseText = aiResponse.response || aiResponse.description || '';
-        console.log('Llama response text:', responseText);
+      } else if (aiResponse && (aiResponse.response || aiResponse.description || aiResponse.choices)) {
+        // Llama-2 或其他文本模型响应格式
+        let responseText = '';
         
-        // 从文本中提取物体名称
-        const extractedName = extractObjectName(responseText);
-        if (extractedName) {
-          objectName = extractedName;
+        if (aiResponse.choices && aiResponse.choices[0] && aiResponse.choices[0].message) {
+          responseText = aiResponse.choices[0].message.content || '';
+        } else if (aiResponse.response) {
+          responseText = aiResponse.response;
+        } else if (aiResponse.description) {
+          responseText = aiResponse.description;
+        } else if (typeof aiResponse === 'string') {
+          responseText = aiResponse;
+        }
+        
+        console.log('Text-based response:', responseText);
+        
+        // 清理响应文本，提取物体名称
+        const cleanText = responseText.trim().toLowerCase();
+        console.log('Cleaned response text:', cleanText);
+        
+        // 尝试提取第一个有意义的词
+        const words = cleanText.split(/\s+/).filter(word => 
+          word.length > 2 && 
+          !['the', 'a', 'an', 'this', 'that', 'is', 'are', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word)
+        );
+        
+        if (words.length > 0) {
+          objectName = words[0].charAt(0).toUpperCase() + words[0].slice(1);
           confidence = 0.8;
           console.log('Extracted object name from text:', objectName);
         } else {
-          // 如果没有提取到，尝试直接使用响应文本
-          const words = responseText.trim().split(/\s+/);
-          if (words.length > 0) {
-            objectName = words[0].toLowerCase().replace(/[^a-z]/g, '');
-            if (objectName.length > 2) {
-              objectName = objectName.charAt(0).toUpperCase() + objectName.slice(1);
-              confidence = 0.7;
-              console.log('Using first word as object name:', objectName);
-            }
+          // 如果没找到合适的词，使用整个响应的第一个词
+          const firstWord = cleanText.split(/\s+/)[0];
+          if (firstWord && firstWord.length > 1) {
+            objectName = firstWord.charAt(0).toUpperCase() + firstWord.slice(1);
+            confidence = 0.6;
+            console.log('Using first word as object name:', objectName);
           }
         }
       } else {

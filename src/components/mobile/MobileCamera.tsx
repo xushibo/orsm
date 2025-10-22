@@ -62,6 +62,12 @@ export function MobileCamera() {
         videoRef.current.setAttribute('playsinline', '');
         videoRef.current.setAttribute('webkit-playsinline', '');
         
+        // 强制设置视频样式
+        videoRef.current.style.width = '100%';
+        videoRef.current.style.height = '100%';
+        videoRef.current.style.objectFit = 'cover';
+        videoRef.current.style.backgroundColor = '#000';
+        
         try {
           await videoRef.current.play();
           console.log('Video playback started');
@@ -171,6 +177,29 @@ export function MobileCamera() {
       setIsSpeaking(false);
     }
   };
+
+  // 当stream变化时，确保video元素正确设置
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      console.log('Setting video stream to video element');
+      videoRef.current.srcObject = stream;
+      
+      // 确保视频属性正确设置
+      videoRef.current.muted = true;
+      videoRef.current.playsInline = true;
+      videoRef.current.setAttribute('playsinline', '');
+      videoRef.current.setAttribute('webkit-playsinline', '');
+      
+      // 强制设置样式
+      videoRef.current.style.width = '100%';
+      videoRef.current.style.height = '100%';
+      videoRef.current.style.objectFit = 'cover';
+      videoRef.current.style.backgroundColor = '#000';
+      
+      // 尝试播放
+      videoRef.current.play().catch(console.warn);
+    }
+  }, [stream]);
 
   // 清理
   useEffect(() => {
