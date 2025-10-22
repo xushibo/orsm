@@ -182,36 +182,44 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
         lastModified: imageFile.lastModified
       });
       
-      // 尝试使用不同的图像分类模型
+      // 尝试使用图像分类模型
       let aiResponse;
       try {
-        // 首先尝试 ResNet-50
+        console.log('Attempting ResNet-50 classification...');
+        console.log('Image bytes length:', imageBytes.length);
+        console.log('AI binding available:', !!env.AI);
+        console.log('AI binding type:', typeof env.AI);
+        
+        // 使用 ResNet-50 进行图像分类
         aiResponse = await env.AI.run('@cf/microsoft/resnet-50', {
           image: imageBytes
         });
         console.log('ResNet-50 response:', JSON.stringify(aiResponse, null, 2));
       } catch (resnetError) {
-        console.log('ResNet-50 failed, trying alternative:', resnetError);
+        console.log('ResNet-50 failed:', resnetError);
         console.log('ResNet error details:', {
           name: (resnetError as any)?.name,
           message: (resnetError as any)?.message,
           stack: (resnetError as any)?.stack
         });
+        
+        // 如果ResNet-50失败，尝试使用其他图像分类模型
         try {
-          // 尝试使用其他模型
-          aiResponse = await env.AI.run('@cf/meta/llama-2-7b-chat-int8', {
-            messages: [
-              {
-                role: 'user',
-                content: 'Describe what you see in this image in one word. Just return the object name.'
-              }
-            ],
-            max_tokens: 10
+          console.log('Attempting CLIP classification...');
+          // 尝试使用 CLIP 模型
+          aiResponse = await env.AI.run('@cf/meta/clip', {
+            image: imageBytes,
+            text: "a photo of"
           });
-          console.log('Llama response:', JSON.stringify(aiResponse, null, 2));
-        } catch (llamaError) {
-          console.log('All models failed:', { resnetError, llamaError });
-          throw resnetError;
+          console.log('CLIP response:', JSON.stringify(aiResponse, null, 2));
+        } catch (clipError) {
+          console.log('CLIP also failed:', clipError);
+          console.log('CLIP error details:', {
+            name: (clipError as any)?.name,
+            message: (clipError as any)?.message,
+            stack: (clipError as any)?.stack
+          });
+          throw resnetError; // 抛出原始错误
         }
       }
       
@@ -222,10 +230,10 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
       let confidence = 0;
       
       if (aiResponse && Array.isArray(aiResponse) && aiResponse.length > 0) {
-        // ResNet-50 响应格式
+        // ResNet-50 或 CLIP 响应格式
         const topResult = aiResponse[0];
-        objectName = topResult.label || topResult.class_name || topResult.name;
-        confidence = topResult.score || topResult.confidence || 0;
+        objectName = topResult.label || topResult.class_name || topResult.name || topResult.text;
+        confidence = topResult.score || topResult.confidence || topResult.similarity || 0;
         
         console.log('ResNet classification result:', { 
           objectName, 
@@ -237,8 +245,8 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
         if (confidence < 0.1 && aiResponse.length > 1) {
           for (let i = 1; i < Math.min(aiResponse.length, 3); i++) {
             const result = aiResponse[i];
-            const altName = result.label || result.class_name || result.name;
-            const altConfidence = result.score || result.confidence || 0;
+            const altName = result.label || result.class_name || result.name || result.text;
+            const altConfidence = result.score || result.confidence || result.similarity || 0;
             
             if (altConfidence > confidence) {
               objectName = altName;
