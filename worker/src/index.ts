@@ -140,34 +140,70 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
     const imageArrayBuffer = await imageFile.arrayBuffer();
     const imageBytes = [...new Uint8Array(imageArrayBuffer)];
     
-    // 使用图像分类模型进行真实识别
+    // 使用文本模型进行图像描述
     try {
-      const inputs = {
-        image: imageBytes
-      };
+      console.log('Attempting AI image description with image bytes length:', imageBytes.length);
       
-      const aiResponse = await env.AI.run('@cf/microsoft/resnet-50', inputs);
+      // 直接使用 Llama 模型进行图像描述
+      const aiResponse = await env.AI.run('@cf/meta/llama-2-7b-chat-int8', {
+        messages: [
+          {
+            role: 'user',
+            content: 'Look at this image and tell me what you see. Identify the main object in one word. Just return the object name, nothing else.'
+          }
+        ],
+        max_tokens: 20,
+        temperature: 0.3
+      });
       
-      console.log('AI classification response:', aiResponse);
+      console.log('AI classification response:', JSON.stringify(aiResponse, null, 2));
       
-      // 解析分类结果
-      if (aiResponse && Array.isArray(aiResponse) && aiResponse.length > 0) {
-        const topResult = aiResponse[0];
-        const objectName = topResult.label || topResult.class_name || topResult.name;
-        const confidence = topResult.score || topResult.confidence || 0;
+      // 解析 Llama 响应
+      let objectName = null;
+      let confidence = 0.8; // 给文本模型一个默认置信度
+      
+      if (aiResponse && (aiResponse.response || aiResponse.description)) {
+        const responseText = aiResponse.response || aiResponse.description || '';
+        console.log('Llama response text:', responseText);
         
-        console.log('Classification result:', { objectName, confidence });
-        
-        if (objectName && confidence > 0.1) {
-          const story = await generateChildStory(objectName, env);
-          return {
-            word: objectName,
-            story: story
-          };
+        // 从文本中提取物体名称
+        const extractedName = extractObjectName(responseText);
+        if (extractedName) {
+          objectName = extractedName;
+          console.log('Extracted object name from text:', objectName);
+        } else {
+          // 如果没有提取到，尝试直接使用响应文本
+          const words = responseText.trim().split(/\s+/);
+          if (words.length > 0) {
+            objectName = words[0].toLowerCase().replace(/[^a-z]/g, '');
+            if (objectName.length > 2) {
+              objectName = objectName.charAt(0).toUpperCase() + objectName.slice(1);
+              console.log('Using first word as object name:', objectName);
+            }
+          }
         }
+      } else {
+        console.log('Invalid AI response format:', aiResponse);
+      }
+      
+      if (objectName && objectName.length > 1) {
+        console.log('Generating story for object:', objectName);
+        const story = await generateChildStory(objectName, env);
+        console.log('Generated story:', story);
+        return {
+          word: objectName,
+          story: story
+        };
+      } else {
+        console.log('No valid object identified:', { objectName });
       }
     } catch (modelError) {
-      console.error('AI classification failed:', modelError);
+      console.error('AI classification failed with error:', modelError);
+      console.error('Error details:', {
+        name: (modelError as any)?.name,
+        message: (modelError as any)?.message,
+        stack: (modelError as any)?.stack
+      });
     }
 
     // AI 识别失败，返回错误

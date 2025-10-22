@@ -337,7 +337,7 @@ export default function Home() {
 
       {/* 拍照按钮 - 只在相机权限被授予时显示 */}
       {permissionState === 'granted' && !isProcessing && (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 pb-safe">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
           <CaptureButton onCapture={handleCapture} />
         </div>
       )}
