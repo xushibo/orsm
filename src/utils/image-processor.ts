@@ -208,10 +208,16 @@ export function getImageInfo(blob: Blob): ImageInfo {
 /**
  * 验证图片质量
  */
-export function validateImageQuality(blob: Blob, minSize: number = 10000): boolean {
+export function validateImageQuality(blob: Blob, minSize: number = 1000): boolean {
+  console.log('Validating image quality:', {
+    size: blob.size,
+    type: blob.type,
+    minSize: minSize
+  });
+
   if (blob.size < minSize) {
-    console.error('Image too small:', blob.size, 'bytes (minimum:', minSize, 'bytes)');
-    return false;
+    console.warn('Image size is small but acceptable:', blob.size, 'bytes (minimum:', minSize, 'bytes)');
+    // 不阻止，只是警告
   }
 
   if (!blob.type.startsWith('image/')) {

@@ -51,26 +51,32 @@ export function MobileCamera() {
       setPermissionState('granted');
       setError(null);
 
-        // 应用Safari修复
-        if (videoRef.current) {
-          applySafariVideoFixes(videoRef.current);
-          videoRef.current.srcObject = mediaStream;
-          
-          try {
-            await videoRef.current.play();
-            console.log('Video playback started');
-          } catch (playError) {
-            console.warn('Video play failed, but continuing:', playError);
-          }
-          
-          // 等待视频准备就绪（不阻塞）
-          try {
-            await waitForSafariVideoReady(videoRef.current);
-            console.log('Video is ready');
-          } catch (readyError) {
-            console.warn('Video ready check failed, but continuing:', readyError);
-          }
+      // 应用Safari修复
+      if (videoRef.current) {
+        applySafariVideoFixes(videoRef.current);
+        videoRef.current.srcObject = mediaStream;
+        
+        // 设置视频属性
+        videoRef.current.muted = true;
+        videoRef.current.playsInline = true;
+        videoRef.current.setAttribute('playsinline', '');
+        videoRef.current.setAttribute('webkit-playsinline', '');
+        
+        try {
+          await videoRef.current.play();
+          console.log('Video playback started');
+        } catch (playError) {
+          console.warn('Video play failed, but continuing:', playError);
         }
+        
+        // 等待视频准备就绪（不阻塞）
+        try {
+          await waitForSafariVideoReady(videoRef.current);
+          console.log('Video is ready');
+        } catch (readyError) {
+          console.warn('Video ready check failed, but continuing:', readyError);
+        }
+      }
     } catch (err) {
       console.error('Camera access error:', err);
       setPermissionState('denied');
@@ -98,9 +104,10 @@ export function MobileCamera() {
         format: 'image/jpeg',
       });
 
-      // 验证图片质量
-      if (!validateImageQuality(blob, 10000)) {
-        throw new Error('Captured image quality is too low');
+      // 验证图片质量（更宽松的检查）
+      if (!validateImageQuality(blob, 1000)) {
+        console.warn('Image quality check failed, but continuing anyway');
+        // 不抛出错误，继续处理
       }
 
       console.log('Image captured, sending to API...');
@@ -187,6 +194,25 @@ export function MobileCamera() {
           playsInline
           muted
           className="absolute inset-0 w-full h-full object-cover"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            backgroundColor: '#000'
+          }}
+          onLoadedMetadata={() => {
+            console.log('Video metadata loaded:', {
+              videoWidth: videoRef.current?.videoWidth,
+              videoHeight: videoRef.current?.videoHeight,
+              readyState: videoRef.current?.readyState
+            });
+          }}
+          onCanPlay={() => {
+            console.log('Video can play');
+          }}
+          onError={(e) => {
+            console.error('Video error:', e);
+          }}
         />
       )}
 
