@@ -200,7 +200,8 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
         try {
           console.log('Attempting @cf/microsoft/resnet-50 for image classification...');
           aiResponse = await env.AI.run('@cf/microsoft/resnet-50', {
-            image: imageBytes
+            image: imageBytes,
+            top_k: 5
           });
           console.log('ResNet-50 response:', JSON.stringify(aiResponse, null, 2));
         } catch (resnetError) {
