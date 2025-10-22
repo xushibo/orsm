@@ -140,29 +140,72 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
     const imageArrayBuffer = await imageFile.arrayBuffer();
     const imageBytes = [...new Uint8Array(imageArrayBuffer)];
     
-    // 使用文本模型进行图像描述
+    // 使用图像识别模型进行真实识别
     try {
-      console.log('Attempting AI image description with image bytes length:', imageBytes.length);
+      console.log('Attempting AI image classification with image bytes length:', imageBytes.length);
       
-      // 直接使用 Llama 模型进行图像描述
-      const aiResponse = await env.AI.run('@cf/meta/llama-2-7b-chat-int8', {
-        messages: [
-          {
-            role: 'user',
-            content: 'Look at this image and tell me what you see. Identify the main object in one word. Just return the object name, nothing else.'
-          }
-        ],
-        max_tokens: 20,
-        temperature: 0.3
-      });
+      // 尝试使用不同的图像分类模型
+      let aiResponse;
+      try {
+        // 首先尝试 ResNet-50
+        aiResponse = await env.AI.run('@cf/microsoft/resnet-50', {
+          image: imageBytes
+        });
+        console.log('ResNet-50 response:', aiResponse);
+      } catch (resnetError) {
+        console.log('ResNet-50 failed, trying alternative:', resnetError);
+        try {
+          // 尝试使用其他模型
+          aiResponse = await env.AI.run('@cf/meta/llama-2-7b-chat-int8', {
+            messages: [
+              {
+                role: 'user',
+                content: 'Describe what you see in this image in one word. Just return the object name.'
+              }
+            ],
+            max_tokens: 10
+          });
+          console.log('Llama response:', aiResponse);
+        } catch (llamaError) {
+          console.log('All models failed:', { resnetError, llamaError });
+          throw resnetError;
+        }
+      }
       
       console.log('AI classification response:', JSON.stringify(aiResponse, null, 2));
       
-      // 解析 Llama 响应
+      // 解析不同模型的响应
       let objectName = null;
-      let confidence = 0.8; // 给文本模型一个默认置信度
+      let confidence = 0;
       
-      if (aiResponse && (aiResponse.response || aiResponse.description)) {
+      if (aiResponse && Array.isArray(aiResponse) && aiResponse.length > 0) {
+        // ResNet-50 响应格式
+        const topResult = aiResponse[0];
+        objectName = topResult.label || topResult.class_name || topResult.name;
+        confidence = topResult.score || topResult.confidence || 0;
+        
+        console.log('ResNet classification result:', { 
+          objectName, 
+          confidence, 
+          fullResult: topResult 
+        });
+        
+        // 如果置信度太低，尝试使用前几个结果
+        if (confidence < 0.1 && aiResponse.length > 1) {
+          for (let i = 1; i < Math.min(aiResponse.length, 3); i++) {
+            const result = aiResponse[i];
+            const altName = result.label || result.class_name || result.name;
+            const altConfidence = result.score || result.confidence || 0;
+            
+            if (altConfidence > confidence) {
+              objectName = altName;
+              confidence = altConfidence;
+              console.log('Using alternative result:', { objectName, confidence });
+            }
+          }
+        }
+      } else if (aiResponse && (aiResponse.response || aiResponse.description)) {
+        // Llama 响应格式
         const responseText = aiResponse.response || aiResponse.description || '';
         console.log('Llama response text:', responseText);
         
@@ -170,6 +213,7 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
         const extractedName = extractObjectName(responseText);
         if (extractedName) {
           objectName = extractedName;
+          confidence = 0.8;
           console.log('Extracted object name from text:', objectName);
         } else {
           // 如果没有提取到，尝试直接使用响应文本
@@ -178,6 +222,7 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
             objectName = words[0].toLowerCase().replace(/[^a-z]/g, '');
             if (objectName.length > 2) {
               objectName = objectName.charAt(0).toUpperCase() + objectName.slice(1);
+              confidence = 0.7;
               console.log('Using first word as object name:', objectName);
             }
           }
