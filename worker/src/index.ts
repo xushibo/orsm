@@ -160,30 +160,10 @@ async function callCloudflareAI(imageFile: File, env: Env): Promise<ApiResponse>
       stack: (error as any)?.stack
     });
     
-    // 如果出现错误，返回智能回退响应
-    const imageSize = imageFile.size;
-    const imageType = imageFile.type;
-    const timestamp = Date.now();
-    
-    const fallbackObjects = [
-      'Object', 'Item', 'Thing', 'Picture', 'Image', 'Photo', 'View', 'Scene'
-    ];
-    
-    const hash = (imageSize + timestamp) % fallbackObjects.length;
-    const fallbackWord = fallbackObjects[hash];
-    
-    console.log('Using intelligent fallback due to error:', { 
-      imageSize, 
-      imageType, 
-      timestamp, 
-      hash, 
-      fallbackWord,
-      error: (error as any)?.message
-    });
-    
+    // 返回错误响应而不是fallback
     return {
-      word: fallbackWord,
-      story: `I can see something interesting in this picture. It's a wonderful ${fallbackWord.toLowerCase()} that tells its own story.`
+      word: "Error",
+      story: "I encountered an error while trying to identify the object in this picture. Please try again with a different photo."
     };
   }
 }
