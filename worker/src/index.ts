@@ -196,52 +196,27 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
         console.log('AI binding available:', !!env.AI);
         console.log('AI binding type:', typeof env.AI);
         
-        // 首先尝试使用更通用的图像分类模型
+        // 首先尝试使用图像分类模型
         try {
-          console.log('Attempting @cf/meta/llama-2-7b-chat-int8 for image description...');
-          aiResponse = await env.AI.run('@cf/meta/llama-2-7b-chat-int8', {
-            messages: [
-              {
-                role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: "Look at this image and tell me what object you see. Respond with just the object name, nothing else."
-                  },
-                  {
-                    type: "image",
-                    image: imageBytes
-                  }
-                ]
-              }
-            ]
+          console.log('Attempting @cf/microsoft/resnet-50 for image classification...');
+          aiResponse = await env.AI.run('@cf/microsoft/resnet-50', {
+            image: imageBytes
           });
-          console.log('Llama-2 response:', JSON.stringify(aiResponse, null, 2));
-        } catch (llamaError) {
-          console.log('Llama-2 failed, trying ResNet-50:', llamaError);
+          console.log('ResNet-50 response:', JSON.stringify(aiResponse, null, 2));
+        } catch (resnetError) {
+          console.log('ResNet-50 failed, trying CLIP:', resnetError);
           
-          // 如果Llama失败，尝试ResNet-50
+          // 如果ResNet-50失败，尝试CLIP
           try {
-            console.log('Attempting ResNet-50 classification...');
-            aiResponse = await env.AI.run('@cf/microsoft/resnet-50', {
-              image: imageBytes
+            console.log('Attempting CLIP classification...');
+            aiResponse = await env.AI.run('@cf/meta/clip', {
+              image: imageBytes,
+              text: "a photo of"
             });
-            console.log('ResNet-50 response:', JSON.stringify(aiResponse, null, 2));
-          } catch (resnetError) {
-            console.log('ResNet-50 failed, trying CLIP:', resnetError);
-            
-            // 如果ResNet-50也失败，尝试CLIP
-            try {
-              console.log('Attempting CLIP classification...');
-              aiResponse = await env.AI.run('@cf/meta/clip', {
-                image: imageBytes,
-                text: "a photo of"
-              });
-              console.log('CLIP response:', JSON.stringify(aiResponse, null, 2));
-            } catch (clipError) {
-              console.log('All AI models failed:', clipError);
-              throw new Error('All AI models failed to process the image');
-            }
+            console.log('CLIP response:', JSON.stringify(aiResponse, null, 2));
+          } catch (clipError) {
+            console.log('All AI models failed:', clipError);
+            throw new Error('All AI models failed to process the image');
           }
         }
       } catch (allModelsError) {
