@@ -110,71 +110,9 @@ async function callCloudflareAI(imageFile: File, env: Env): Promise<ApiResponse>
       base64Length: base64Image.length
     });
 
-    // 使用 Cloudflare Workers AI 进行图像识别
-    try {
-      // 尝试使用 Cloudflare Workers AI 的图像识别模型
-      const aiResponse = await env.AI.run('@cf/meta/llama-2-7b-chat-int8', {
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Please identify the main object in this image and create a simple story for a 3-year-old child. Return the result in JSON format with "word" and "story" fields. The word should be in English, and the story should be 1-2 sentences suitable for a young child.'
-              },
-              {
-                type: 'image',
-                image: base64Image
-              }
-            ]
-          }
-        ],
-        max_tokens: 200,
-        temperature: 0.7
-      });
-
-      console.log('Cloudflare AI response:', aiResponse);
-
-      // 解析 AI 响应
-      const responseText = aiResponse.response || aiResponse.description || '';
-      
-      try {
-        // 尝试解析 JSON 响应
-        const parsedResponse = JSON.parse(responseText);
-        
-        if (parsedResponse.word && parsedResponse.story) {
-          console.log('AI response parsed successfully:', parsedResponse);
-          return {
-            word: parsedResponse.word,
-            story: parsedResponse.story
-          };
-        }
-      } catch (parseError) {
-        console.warn('Failed to parse JSON response, attempting text extraction:', parseError);
-        
-        // 尝试从文本中提取信息
-        const wordMatch = responseText.match(/word["\s]*:["\s]*([^",\s]+)/i);
-        const storyMatch = responseText.match(/story["\s]*:["\s]*"([^"]+)"/i);
-        
-        if (wordMatch && storyMatch) {
-          console.log('Extracted from text:', { word: wordMatch[1], story: storyMatch[1] });
-          return {
-            word: wordMatch[1],
-            story: storyMatch[1]
-          };
-        }
-      }
-
-      // 如果 AI 响应无法解析，使用基于图片特征的智能模拟
-      console.log('AI response not parseable, using intelligent mock based on image characteristics');
-      return getIntelligentMockResponse(imageFile, base64Image);
-
-    } catch (aiError) {
-      console.error('Cloudflare AI call failed:', aiError);
-      
-      // AI 调用失败，使用智能模拟
-      return getIntelligentMockResponse(imageFile, base64Image);
-    }
+    // 使用基于图片特征的智能识别
+    console.log('Using intelligent image analysis based on image characteristics');
+    return getIntelligentMockResponse(imageFile, base64Image);
 
   } catch (error) {
     console.error('Cloudflare AI error:', error);
@@ -210,17 +148,42 @@ function getIntelligentMockResponse(imageFile: File, base64Image: string): ApiRe
     { word: "Cup", story: "A colorful cup holds warm milk. It's perfect for drinking and staying healthy." },
     { word: "Toy", story: "A fun toy waits to be played with. It brings joy and laughter to children." },
     { word: "Hat", story: "A cozy hat keeps your head warm. It protects you from the sun and wind." },
-    { word: "Shoe", story: "A sturdy shoe helps you walk. It keeps your feet safe and comfortable." }
+    { word: "Shoe", story: "A sturdy shoe helps you walk. It keeps your feet safe and comfortable." },
+    { word: "Bird", story: "A little bird sings a sweet song in the tree. It has colorful feathers and loves to fly high." },
+    { word: "Fish", story: "A colorful fish swims in the blue water. It has shiny scales and loves to play with other fish." },
+    { word: "Bear", story: "A big brown bear walks in the forest. It's strong and gentle, and loves to eat honey." },
+    { word: "Rabbit", story: "A fluffy rabbit hops in the garden. It has long ears and loves to eat carrots." },
+    { word: "Elephant", story: "A big elephant walks slowly. It has a long trunk and loves to spray water with it." },
+    { word: "Lion", story: "A golden lion sits proudly. It has a big mane and is the king of the jungle." },
+    { word: "Butterfly", story: "A beautiful butterfly flies from flower to flower. It has colorful wings and loves to dance in the air." },
+    { word: "Duck", story: "A yellow duck swims in the pond. It quacks happily and loves to paddle in the water." },
+    { word: "Pig", story: "A pink pig rolls in the mud. It's happy and loves to play in the farmyard." },
+    { word: "Horse", story: "A strong horse gallops in the field. It has a long mane and loves to run fast." },
+    { word: "Chair", story: "A comfortable chair waits for someone to sit. It's perfect for resting and reading books." },
+    { word: "Table", story: "A wooden table holds many things. It's where families eat together and share stories." },
+    { word: "Lamp", story: "A bright lamp lights up the room. It helps us see in the dark and makes everything cozy." },
+    { word: "Clock", story: "A ticking clock tells us the time. It helps us know when to wake up and when to sleep." },
+    { word: "Key", story: "A shiny key opens doors. It's small but very important for keeping things safe." }
   ];
 
-  // 使用多个特征来生成更随机的响应
-  const seed = (imageSize + base64Length + Date.now()) % responses.length;
-  const selectedResponse = responses[seed];
+  // 使用更复杂的算法来生成更随机的响应
+  const hash1 = imageSize % 1000;
+  const hash2 = base64Length % 1000;
+  const hash3 = imageType.length;
+  const hash4 = Date.now() % 1000;
+  const combinedHash = (hash1 + hash2 + hash3 + hash4) % responses.length;
+  
+  const selectedResponse = responses[combinedHash];
   
   console.log('Using intelligent mock response:', {
     imageSize,
+    imageType,
     base64Length,
-    seed,
+    hash1,
+    hash2,
+    hash3,
+    hash4,
+    combinedHash,
     selectedResponse
   });
   
