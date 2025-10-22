@@ -169,13 +169,15 @@ export default function Home() {
 
   // 处理故事文本，提取核心故事内容
   const processStory = (story: string): string => {
+    if (!story) return story;
+    
     // 移除 AI 生成故事时的额外说明文字
     const lines = story.split('\n');
     let coreStory = '';
     
+    // 查找包含引号的故事内容
     for (const line of lines) {
       const trimmedLine = line.trim();
-      // 查找包含引号的故事内容
       if (trimmedLine.includes('"') && !trimmedLine.includes('story') && !trimmedLine.includes('child')) {
         // 提取引号内的内容
         const match = trimmedLine.match(/"([^"]+)"/);
@@ -186,13 +188,34 @@ export default function Home() {
       }
     }
     
-    // 如果没有找到引号内容，返回原始故事的前半部分
+    // 如果没有找到引号内容，查找故事段落
     if (!coreStory) {
-      const firstParagraph = story.split('\n\n')[0];
-      coreStory = firstParagraph.replace(/Here is a simple.*?:/i, '').trim();
+      // 查找以故事内容开头的段落
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine && 
+            !trimmedLine.toLowerCase().includes('here is a') && 
+            !trimmedLine.toLowerCase().includes('story') &&
+            !trimmedLine.toLowerCase().includes('child') &&
+            !trimmedLine.toLowerCase().includes('educational') &&
+            !trimmedLine.toLowerCase().includes('teaches')) {
+          coreStory = trimmedLine;
+          break;
+        }
+      }
     }
     
-    return coreStory || story;
+    // 如果还是没有找到，返回原始故事
+    if (!coreStory) {
+      coreStory = story;
+    }
+    
+    // 确保故事以句号结尾
+    if (coreStory && !coreStory.endsWith('.') && !coreStory.endsWith('!') && !coreStory.endsWith('?')) {
+      coreStory += '.';
+    }
+    
+    return coreStory;
   };
 
   // 自动朗读功能
