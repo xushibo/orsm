@@ -15,8 +15,8 @@ export const CaptureButton = ({ onCapture, disabled = false }: CaptureButtonProp
         bg-gradient-to-br from-blue-400 to-blue-600
         shadow-2xl flex items-center justify-center
         focus:outline-none focus:ring-4 focus:ring-blue-300
-        transition-all duration-200
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
+        transition-all duration-200 touch-manipulation
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105 active:scale-95'}
       `}
       onClick={disabled ? undefined : onCapture}
       whileHover={disabled ? {} : { scale: 1.05 }}

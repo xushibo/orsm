@@ -64,12 +64,15 @@ export const useCamera = () => {
       const constraints = {
         video: {
           facingMode: { ideal: 'environment' }, // 优先使用后置摄像头
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          frameRate: { ideal: 30, max: 60 }
         }
       };
 
+      console.log('Requesting camera with constraints:', constraints);
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('Camera stream obtained:', stream);
 
       setState({
         permissionState: 'granted',
@@ -95,7 +98,9 @@ export const useCamera = () => {
           errorMessage = 'Camera constraints not supported. Trying with basic settings...';
           // 尝试使用更简单的约束
           try {
+            console.log('Trying with basic video constraints...');
             const basicStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            console.log('Basic stream obtained:', basicStream);
             setState({
               permissionState: 'granted',
               stream: basicStream,
@@ -104,9 +109,14 @@ export const useCamera = () => {
               isHttps: state.isHttps,
             });
             return;
-          } catch {
+          } catch (basicError) {
+            console.error('Basic constraints also failed:', basicError);
             errorMessage = 'Camera access failed with basic settings';
           }
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage = 'Camera not supported on this device or browser';
+        } else if (error.name === 'SecurityError') {
+          errorMessage = 'Camera access blocked by security policy. Please ensure you are using HTTPS.';
         }
       }
 

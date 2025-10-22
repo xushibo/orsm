@@ -25,6 +25,7 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<AIResult | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const handleCapture = async () => {
     if (!videoRef.current || !stream) {
@@ -166,13 +167,70 @@ export default function Home() {
     }
   };
 
+  // 处理故事文本，提取核心故事内容
+  const processStory = (story: string): string => {
+    // 移除 AI 生成故事时的额外说明文字
+    const lines = story.split('\n');
+    let coreStory = '';
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      // 查找包含引号的故事内容
+      if (trimmedLine.includes('"') && !trimmedLine.includes('story') && !trimmedLine.includes('child')) {
+        // 提取引号内的内容
+        const match = trimmedLine.match(/"([^"]+)"/);
+        if (match) {
+          coreStory = match[1];
+          break;
+        }
+      }
+    }
+    
+    // 如果没有找到引号内容，返回原始故事的前半部分
+    if (!coreStory) {
+      const firstParagraph = story.split('\n\n')[0];
+      coreStory = firstParagraph.replace(/Here is a simple.*?:/i, '').trim();
+    }
+    
+    return coreStory || story;
+  };
+
+  // 自动朗读功能
+  const speakText = (text: string) => {
+    if ('speechSynthesis' in window) {
+      // 停止当前朗读
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.8;
+      utterance.pitch = 1.0;
+      
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // 停止朗读
+  const stopSpeaking = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
   const closeResult = () => {
+    stopSpeaking();
     setShowResult(false);
     setResult(null);
+    setIsSpeaking(false);
   };
 
   return (
-    <main className="relative w-full h-screen overflow-hidden bg-black">
+    <main className="relative w-full h-screen overflow-hidden bg-black no-zoom">
       {/* 相机视频流 */}
       {stream && (
         <video
@@ -279,7 +337,7 @@ export default function Home() {
 
       {/* 拍照按钮 - 只在相机权限被授予时显示 */}
       {permissionState === 'granted' && !isProcessing && (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 pb-safe">
           <CaptureButton onCapture={handleCapture} />
         </div>
       )}
@@ -333,12 +391,19 @@ export default function Home() {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-700 mb-3">为你创作的故事</h3>
                 <div className="bg-white/60 rounded-xl p-4 border border-white/40">
-                  <p className="text-gray-700 leading-relaxed text-left">{result.story}</p>
+                  <p className="text-gray-700 leading-relaxed text-left">{processStory(result.story)}</p>
                 </div>
               </div>
 
               {/* 操作按钮 */}
               <div className="flex gap-3">
+                <button
+                  onClick={() => speakText(processStory(result.story))}
+                  disabled={isSpeaking}
+                  className="flex-1 bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSpeaking ? '朗读中...' : '🔊 朗读故事'}
+                </button>
                 <button
                   onClick={closeResult}
                   className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg"

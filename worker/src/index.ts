@@ -1,5 +1,6 @@
 export interface Env {
-  // Cloudflare Workers AI 不需要 API 密钥
+  // Cloudflare Workers AI binding
+  AI: any; // AI binding from wrangler.toml
 }
 
 // 添加 ExecutionContext 类型定义
