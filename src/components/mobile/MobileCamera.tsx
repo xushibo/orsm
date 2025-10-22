@@ -145,11 +145,29 @@ export function MobileCamera() {
         videoHeight: videoRef.current.videoHeight
       });
 
-      // 转换为 Blob（使用和debug-mobile.html相同的质量）
-      const blob = await new Promise<Blob>((resolve) => {
+      // 图片预处理：增强对比度和亮度
+      const imageData = context.getImageData(0, 0, canvasWidth, canvasHeight);
+      const data = imageData.data;
+      
+      // 增强对比度 (1.2倍) 和亮度 (+10)
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = Math.min(255, Math.max(0, (data[i] - 128) * 1.2 + 128 + 10));     // R
+        data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * 1.2 + 128 + 10)); // G
+        data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * 1.2 + 128 + 10)); // B
+      }
+      
+      context.putImageData(imageData, 0, 0);
+      
+      // 转换为 Blob（使用高质量设置）
+      const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-        }, 'image/jpeg', 0.9); // 使用和debug-mobile.html相同的质量
+          if (blob) {
+            console.log('Image enhancement applied, final size:', blob.size, 'bytes');
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create image blob'));
+          }
+        }, 'image/jpeg', 0.95); // 提高质量到0.95
       });
 
       console.log('=== Mobile Image Details ===');

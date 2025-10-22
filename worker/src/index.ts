@@ -215,7 +215,7 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
           console.log('Attempting @cf/microsoft/resnet-50 for image classification...');
           aiResponse = await env.AI.run('@cf/microsoft/resnet-50', {
             image: imageBytes,
-            top_k: 10
+            top_k: 20  // 增加top_k以获取更多候选结果
           });
           console.log('ResNet-50 response:', JSON.stringify(aiResponse, null, 2));
         } catch (resnetError) {
@@ -226,7 +226,7 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
             console.log('Attempting CLIP classification...');
             aiResponse = await env.AI.run('@cf/meta/clip', {
               image: imageBytes,
-              text: "a photo of"
+              text: "a photo of an object, animal, food, vehicle, tool, or everyday item"
             });
             console.log('CLIP response:', JSON.stringify(aiResponse, null, 2));
           } catch (clipError) {
@@ -260,8 +260,8 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
         });
         
         // 如果置信度太低，尝试使用前几个结果
-        if (confidence < 0.05 && aiResponse.length > 1) {
-          for (let i = 1; i < Math.min(aiResponse.length, 3); i++) {
+        if (confidence < 0.1 && aiResponse.length > 1) {
+          for (let i = 1; i < Math.min(aiResponse.length, 5); i++) {
             const result = aiResponse[i];
             const altName = result.label || result.class_name || result.name || result.text;
             const altConfidence = result.score || result.confidence || result.similarity || 0;
@@ -294,9 +294,11 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
         console.log('Cleaned response text:', cleanText);
         
         // 尝试提取第一个有意义的词
+        const stopWords = ['the', 'a', 'an', 'this', 'that', 'is', 'are', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'and', 'or', 'but', 'so', 'yet', 'nor', 'photo', 'image', 'picture', 'object', 'item', 'thing'];
         const words = cleanText.split(/\s+/).filter(word => 
           word.length > 2 && 
-          !['the', 'a', 'an', 'this', 'that', 'is', 'are', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'].includes(word)
+          !stopWords.includes(word) &&
+          /^[a-zA-Z]+$/.test(word) // 只包含字母
         );
         
         if (words.length > 0) {
@@ -316,14 +318,21 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
         console.log('Invalid AI response format:', aiResponse);
       }
       
-      if (objectName && objectName.length > 1) {
-        console.log('Generating story for object:', objectName);
-        const story = await generateChildStory(objectName, env);
-        console.log('Generated story:', story);
-        return {
-          word: objectName,
-          story: story
-        };
+      // 验证对象名称的有效性
+      if (objectName && objectName.length > 1 && objectName !== 'Unknown' && objectName !== 'Error') {
+        // 过滤掉常见的无意义词汇
+        const invalidWords = ['object', 'item', 'thing', 'photo', 'image', 'picture', 'view', 'scene', 'stuff'];
+        if (!invalidWords.includes(objectName.toLowerCase())) {
+          console.log('Generating story for object:', objectName);
+          const story = await generateChildStory(objectName, env);
+          console.log('Generated story:', story);
+          return {
+            word: objectName,
+            story: story
+          };
+        } else {
+          console.log('Object name is too generic:', objectName);
+        }
       } else {
         console.log('No valid object identified:', { objectName });
       }
