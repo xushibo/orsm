@@ -4,7 +4,7 @@
  */
 
 import { recognizeImage } from '../services/recognition';
-import { generateChildStory } from '../services/story';
+import { generateChildStory, generateChineseTranslation } from '../services/story';
 import { extractObjectName } from '../utils/objects';
 import { addCorsHeaders } from '../utils/cors';
 
@@ -15,6 +15,8 @@ export interface Env {
 export interface ApiResponse {
   word: string;
   story: string;
+  chineseName?: string;
+  chineseStory?: string;
 }
 
 /**
@@ -137,20 +139,38 @@ async function processImageWithAI(imageFile: File, env: Env): Promise<ApiRespons
     // 尝试AI模型识别
     const aiResult = await recognizeImage(imageBytes, env);
     
-    // 如果AI识别成功，生成故事
+    // 如果AI识别成功，生成故事和中文翻译
     if (aiResult && aiResult.objectName) {
       console.log('AI recognition successful:', aiResult);
       try {
         const story = await generateChildStory(aiResult.objectName, env);
+        
+        // 生成中文翻译
+        let chineseTranslation = null;
+        try {
+          chineseTranslation = await generateChineseTranslation(aiResult.objectName, story, env);
+          console.log('Chinese translation generated:', chineseTranslation);
+        } catch (translationError) {
+          console.log('Chinese translation failed, using fallback:', translationError);
+          chineseTranslation = {
+            chineseName: aiResult.objectName,
+            chineseStory: `这是一个关于${aiResult.objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`
+          };
+        }
+        
         return {
           word: aiResult.objectName,
-          story: story
+          story: story,
+          chineseName: chineseTranslation.chineseName,
+          chineseStory: chineseTranslation.chineseStory
         };
       } catch (storyError) {
         console.log('Story generation failed, using fallback:', storyError);
         return {
           word: aiResult.objectName,
-          story: `I can see a ${aiResult.objectName.toLowerCase()} in this picture. It's something interesting that tells its own story.`
+          story: `I can see a ${aiResult.objectName.toLowerCase()} in this picture. It's something interesting that tells its own story.`,
+          chineseName: aiResult.objectName,
+          chineseStory: `这是一个关于${aiResult.objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`
         };
       }
     }
@@ -159,14 +179,18 @@ async function processImageWithAI(imageFile: File, env: Env): Promise<ApiRespons
     console.log('AI recognition failed - no valid object identified');
     return {
       word: "Unknown",
-      story: "I'm sorry, but I couldn't clearly identify what's in this picture. Please try taking a clearer photo with better lighting and make sure the object is clearly visible."
+      story: "I'm sorry, but I couldn't clearly identify what's in this picture. Please try taking a clearer photo with better lighting and make sure the object is clearly visible.",
+      chineseName: "未知",
+      chineseStory: "抱歉，我无法清楚地识别图片中的内容。请尝试拍摄更清晰的照片，确保光线充足，物体清晰可见。"
     };
 
   } catch (error) {
     console.error('AI processing failed:', error);
     return {
       word: "Unknown",
-      story: "I'm sorry, but I couldn't clearly identify what's in this picture. Please try taking a clearer photo with better lighting and make sure the object is clearly visible."
+      story: "I'm sorry, but I couldn't clearly identify what's in this picture. Please try taking a clearer photo with better lighting and make sure the object is clearly visible.",
+      chineseName: "未知",
+      chineseStory: "抱歉，我无法清楚地识别图片中的内容。请尝试拍摄更清晰的照片，确保光线充足，物体清晰可见。"
     };
   }
 }

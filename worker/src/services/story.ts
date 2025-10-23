@@ -64,3 +64,49 @@ export async function generateChildStory(objectName: string, env: Env): Promise<
     return `I can see a ${objectName} in this picture. It's something interesting that tells its own story.`;
   }
 }
+
+/**
+ * Generate Chinese translation for object name and story
+ */
+export async function generateChineseTranslation(objectName: string, englishStory: string, env: Env): Promise<{ chineseName: string; chineseStory: string }> {
+  try {
+    const aiResponse = await env.AI.run('@cf/meta/llama-2-7b-chat-int8', {
+      messages: [
+        {
+          role: 'user',
+          content: `Please provide Chinese translations for the following:
+1. Object name: "${objectName}"
+2. Story: "${englishStory}"
+
+Please respond in this exact format:
+Chinese Name: [Chinese translation of the object name]
+Chinese Story: [Chinese translation of the story, keeping it simple and child-friendly]
+
+Make sure the Chinese story is appropriate for a 3-year-old child and maintains the same meaning as the English version.`
+        }
+      ],
+      max_tokens: 400,
+      temperature: 0.5
+    });
+    
+    const response = aiResponse.response || aiResponse.description || '';
+    
+    // 解析AI响应
+    const chineseNameMatch = response.match(/Chinese Name:\s*(.+)/i);
+    const chineseStoryMatch = response.match(/Chinese Story:\s*([\s\S]+)/);
+    
+    const chineseName = chineseNameMatch ? chineseNameMatch[1].trim() : objectName;
+    const chineseStory = chineseStoryMatch ? chineseStoryMatch[1].trim() : `这是一个关于${objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`;
+    
+    return {
+      chineseName,
+      chineseStory
+    };
+  } catch (error) {
+    console.error('Chinese translation generation failed:', error);
+    return {
+      chineseName: objectName,
+      chineseStory: `这是一个关于${objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`
+    };
+  }
+}

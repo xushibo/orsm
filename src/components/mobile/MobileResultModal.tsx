@@ -3,6 +3,8 @@
 interface AIResult {
   word: string;
   story: string;
+  chineseName?: string;
+  chineseStory?: string;
 }
 
 interface MobileResultModalProps {
@@ -164,7 +166,7 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-4 text-center">
             <div className="text-white text-xs mb-1 opacity-80">Recognition Result / 识别结果</div>
             <div className="text-white text-2xl font-bold">{result.word}</div>
-            <div className="text-white/80 text-sm mt-1">{getChineseTranslation(result.word)}</div>
+            <div className="text-white/80 text-sm mt-1">{result.chineseName || getChineseTranslation(result.word)}</div>
           </div>
         </div>
 
@@ -177,7 +179,7 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
             </div>
             <div className="text-gray-600 text-sm leading-relaxed text-left border-t border-gray-200 pt-2">
               <div className="font-semibold text-green-600 mb-1">中文故事:</div>
-              {getChineseStory(result.story)}
+              {result.chineseStory || getChineseStory(result.story)}
             </div>
           </div>
         </div>
