@@ -209,7 +209,7 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
     const resnetResponse = await env.AI.run('@cf/microsoft/resnet-50', {
       image: imageBytes,
       top_k: 5
-    }).catch(err => {
+    }).catch((err: any) => {
       console.log('ResNet-50 failed:', err);
       return null;
     });
@@ -232,7 +232,7 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
       const clipResponse = await env.AI.run('@cf/meta/clip', {
         image: imageBytes,
         text: "a photo of an object"
-      }).catch(err => {
+      }).catch((err: any) => {
         console.log('CLIP failed:', err);
         return null;
       });
