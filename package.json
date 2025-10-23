@@ -1,6 +1,6 @@
 {
-  "name": "object-recognition-story-machine",
-  "version": "0.1.0",
+  "name": "story-machine",
+  "version": "3.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
