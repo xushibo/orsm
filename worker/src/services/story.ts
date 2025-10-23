@@ -8,6 +8,28 @@ export interface Env {
 }
 
 /**
+ * Clean Chinese text by removing pinyin annotations and explanations
+ */
+function cleanChineseText(text: string): string {
+  // 移除拼音注释 (如: (diàn fēi qiú))
+  text = text.replace(/\([^)]*[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ][^)]*\)/g, '');
+  
+  // 移除 "Note:" 开头的解释部分
+  text = text.replace(/Note:[\s\S]*$/i, '');
+  
+  // 移除 "*" 开头的解释行
+  text = text.replace(/\*[^\n]*\n?/g, '');
+  
+  // 移除多余的空白行
+  text = text.replace(/\n\s*\n/g, '\n');
+  
+  // 移除首尾空白
+  text = text.trim();
+  
+  return text;
+}
+
+/**
  * Generate a child-friendly story for a recognized object
  */
 export async function generateChildStory(objectName: string, env: Env): Promise<string> {
@@ -82,7 +104,11 @@ Please respond in this exact format:
 Chinese Name: [Chinese translation of the object name]
 Chinese Story: [Chinese translation of the story, keeping it simple and child-friendly]
 
-Make sure the Chinese story is appropriate for a 3-year-old child and maintains the same meaning as the English version.`
+IMPORTANT: 
+- Only provide the Chinese translation, NO pinyin, NO pronunciation guides, NO explanations
+- Keep the story simple and appropriate for a 3-year-old child
+- Use only Chinese characters in the translation
+- Do not include any English words, pinyin, or explanatory notes`
         }
       ],
       max_tokens: 400,
@@ -96,7 +122,10 @@ Make sure the Chinese story is appropriate for a 3-year-old child and maintains 
     const chineseStoryMatch = response.match(/Chinese Story:\s*([\s\S]+)/);
     
     const chineseName = chineseNameMatch ? chineseNameMatch[1].trim() : objectName;
-    const chineseStory = chineseStoryMatch ? chineseStoryMatch[1].trim() : `这是一个关于${objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`;
+    let chineseStory = chineseStoryMatch ? chineseStoryMatch[1].trim() : `这是一个关于${objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`;
+    
+    // 清理中文故事中的拼音注释和解释
+    chineseStory = cleanChineseText(chineseStory);
     
     return {
       chineseName,

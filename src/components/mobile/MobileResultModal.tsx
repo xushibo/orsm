@@ -145,6 +145,26 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
     return cleanedStory || story;
   };
 
+  // 清理中文文本，移除拼音注释和解释
+  const cleanChineseText = (text: string): string => {
+    // 移除拼音注释 (如: (diàn fēi qiú))
+    text = text.replace(/\([^)]*[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ][^)]*\)/g, '');
+    
+    // 移除 "Note:" 开头的解释部分
+    text = text.replace(/Note:[\s\S]*$/i, '');
+    
+    // 移除 "*" 开头的解释行
+    text = text.replace(/\*[^\n]*\n?/g, '');
+    
+    // 移除多余的空白行
+    text = text.replace(/\n\s*\n/g, '\n');
+    
+    // 移除首尾空白
+    text = text.trim();
+    
+    return text;
+  };
+
   return (
     <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-40 p-4">
       <div className="bg-gradient-to-br from-blue-50 to-purple-50 backdrop-blur-lg rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-white/30 relative">
@@ -191,7 +211,7 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
                 {showChinese ? '故事内容' : 'Story Content'}
               </div>
               <div className={showChinese ? 'font-chinese' : ''}>
-                {showChinese ? (result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
+                {showChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
               </div>
             </div>
           </div>
@@ -209,7 +229,7 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
           
           {onSpeak && (
             <button
-              onClick={() => onSpeak(showChinese ? (result.chineseStory || getChineseStory(result.story)) : processStory(result.story))}
+              onClick={() => onSpeak(showChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story))}
               disabled={isSpeaking}
               className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
