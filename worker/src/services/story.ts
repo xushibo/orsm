@@ -20,6 +20,14 @@ function cleanChineseText(text: string): string {
   // 移除 "*" 开头的解释行
   text = text.replace(/\*[^\n]*\n?/g, '');
   
+  // 移除只包含标点符号的行
+  text = text.replace(/^[.,;:!?。，；：！？\s]*$/gm, '');
+  
+  // 移除只包含标点符号的内容
+  if (/^[.,;:!?。，；：！？\s]*$/.test(text)) {
+    return '';
+  }
+  
   // 移除多余的空白行
   text = text.replace(/\n\s*\n/g, '\n');
   
@@ -96,19 +104,20 @@ export async function generateChineseTranslation(objectName: string, englishStor
       messages: [
         {
           role: 'user',
-          content: `Please provide Chinese translations for the following:
-1. Object name: "${objectName}"
-2. Story: "${englishStory}"
+          content: `Translate the following to Chinese for a 3-year-old child:
 
-Please respond in this exact format:
-Chinese Name: [Chinese translation of the object name]
-Chinese Story: [Chinese translation of the story, keeping it simple and child-friendly]
+Object: ${objectName}
+Story: ${englishStory}
 
-IMPORTANT: 
-- Only provide the Chinese translation, NO pinyin, NO pronunciation guides, NO explanations
-- Keep the story simple and appropriate for a 3-year-old child
-- Use only Chinese characters in the translation
-- Do not include any English words, pinyin, or explanatory notes`
+Requirements:
+- Use only Chinese characters (汉字)
+- Keep it simple and child-friendly
+- NO pinyin, NO English, NO explanations
+- Write a complete, meaningful story
+
+Format your response exactly like this:
+Chinese Name: [中文名称]
+Chinese Story: [中文故事]`
         }
       ],
       max_tokens: 400,
@@ -121,11 +130,21 @@ IMPORTANT:
     const chineseNameMatch = response.match(/Chinese Name:\s*(.+)/i);
     const chineseStoryMatch = response.match(/Chinese Story:\s*([\s\S]+)/);
     
-    const chineseName = chineseNameMatch ? chineseNameMatch[1].trim() : objectName;
+    let chineseName = chineseNameMatch ? chineseNameMatch[1].trim() : objectName;
     let chineseStory = chineseStoryMatch ? chineseStoryMatch[1].trim() : `这是一个关于${objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`;
     
     // 清理中文故事中的拼音注释和解释
     chineseStory = cleanChineseText(chineseStory);
+    
+    // 如果清理后的内容为空或只包含标点符号，使用回退内容
+    if (!chineseStory || /^[.,;:!?。，；：！？\s]*$/.test(chineseStory)) {
+      chineseStory = `这是一个关于${objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`;
+    }
+    
+    // 如果中文名称包含拼音或异常字符，使用回退
+    if (chineseName.includes('(') || /[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/.test(chineseName)) {
+      chineseName = objectName;
+    }
     
     return {
       chineseName,

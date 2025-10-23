@@ -197,13 +197,22 @@ export function MobileCamera() {
       return;
     }
 
+    console.log('Speech text:', text);
+    console.log('Text length:', text.length);
+    console.log('First 50 chars:', text.substring(0, 50));
+
     const utterance = new SpeechSynthesisUtterance(text);
     
     // 检测文本语言并设置相应的语言
     const isChinese = /[\u4e00-\u9fff]/.test(text);
+    console.log('Is Chinese text:', isChinese);
+    console.log('Chinese characters found:', text.match(/[\u4e00-\u9fff]/g));
+    
     utterance.lang = isChinese ? 'zh-CN' : 'en-US';
     utterance.rate = 0.72; // 减慢20% (0.9 * 0.8 = 0.72)
     utterance.pitch = 1.0;
+
+    console.log('Speech language set to:', utterance.lang);
 
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -220,44 +229,137 @@ export function MobileCamera() {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     }
-    // 确保相机重新显示
-    setTimeout(() => {
+    
+    // 强制重新初始化视频流
+    const reinitializeVideo = () => {
       if (stream && videoRef.current) {
-        videoRef.current.play().catch(console.warn);
-        // 强制重新渲染视频
         const video = videoRef.current;
-        const currentSrc = video.srcObject;
+        
+        // 完全停止当前视频
+        video.pause();
         video.srcObject = null;
+        
+        // 等待一小段时间后重新设置
         setTimeout(() => {
-          video.srcObject = currentSrc;
-          video.play().catch(console.warn);
-        }, 100);
+          if (stream && videoRef.current) {
+            const video = videoRef.current;
+            
+            // 重新设置视频流
+            video.srcObject = stream;
+            
+            // 重新设置所有属性
+            video.muted = true;
+            video.playsInline = true;
+            video.setAttribute('playsinline', '');
+            video.setAttribute('webkit-playsinline', '');
+            video.style.width = '100%';
+            video.style.height = '100%';
+            video.style.objectFit = 'cover';
+            video.style.backgroundColor = '#000';
+            
+            // 强制播放
+            video.load();
+            video.play().catch((error) => {
+              console.warn('Video play failed:', error);
+              // 如果播放失败，尝试再次播放
+              setTimeout(() => {
+                video.play().catch(console.warn);
+              }, 200);
+            });
+          }
+        }, 150);
       }
-    }, 100);
+    };
+    
+    // 立即尝试重新初始化
+    reinitializeVideo();
+    
+    // 备用重新初始化，防止第一次失败
+    setTimeout(reinitializeVideo, 300);
   };
 
   // 当stream变化时，确保video元素正确设置
   useEffect(() => {
     if (stream && videoRef.current) {
       console.log('Setting video stream to video element');
-      videoRef.current.srcObject = stream;
+      const video = videoRef.current;
       
-      // 确保视频属性正确设置
-      videoRef.current.muted = true;
-      videoRef.current.playsInline = true;
-      videoRef.current.setAttribute('playsinline', '');
-      videoRef.current.setAttribute('webkit-playsinline', '');
+      // 完全重置视频元素
+      video.pause();
+      video.srcObject = null;
       
-      // 强制设置样式
-      videoRef.current.style.width = '100%';
-      videoRef.current.style.height = '100%';
-      videoRef.current.style.objectFit = 'cover';
-      videoRef.current.style.backgroundColor = '#000';
-      
-      // 尝试播放
-      videoRef.current.play().catch(console.warn);
+      // 短暂延迟后重新设置
+      setTimeout(() => {
+        if (stream && videoRef.current) {
+          const video = videoRef.current;
+          
+          // 重新设置视频流
+          video.srcObject = stream;
+          
+          // 确保视频属性正确设置
+          video.muted = true;
+          video.playsInline = true;
+          video.setAttribute('playsinline', '');
+          video.setAttribute('webkit-playsinline', '');
+          
+          // 强制设置样式
+          video.style.width = '100%';
+          video.style.height = '100%';
+          video.style.objectFit = 'cover';
+          video.style.backgroundColor = '#000';
+          
+          // 强制加载并播放
+          video.load();
+          video.play().catch((error) => {
+            console.warn('Initial video play failed:', error);
+            // 重试播放
+            setTimeout(() => {
+              video.play().catch(console.warn);
+            }, 100);
+          });
+        }
+      }, 50);
     }
   }, [stream]);
+
+  // 视频流监控 - 确保视频始终在播放
+  useEffect(() => {
+    if (stream && videoRef.current && !showResult) {
+      const video = videoRef.current;
+      
+      const checkVideoPlayback = () => {
+        if (video && stream && !showResult) {
+          if (video.paused || video.ended) {
+            console.log('Video is paused/ended, attempting to restart');
+            video.play().catch(console.warn);
+          }
+        }
+      };
+      
+      // 定期检查视频播放状态
+      const interval = setInterval(checkVideoPlayback, 1000);
+      
+      // 监听视频事件
+      const handleVideoError = () => {
+        console.log('Video error detected, attempting to restart');
+        setTimeout(() => {
+          if (stream && videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(console.warn);
+          }
+        }, 500);
+      };
+      
+      video.addEventListener('error', handleVideoError);
+      video.addEventListener('pause', checkVideoPlayback);
+      
+      return () => {
+        clearInterval(interval);
+        video.removeEventListener('error', handleVideoError);
+        video.removeEventListener('pause', checkVideoPlayback);
+      };
+    }
+  }, [stream, showResult]);
 
   // 清理
   useEffect(() => {

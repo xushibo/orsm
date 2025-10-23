@@ -229,7 +229,14 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
           
           {onSpeak && (
             <button
-              onClick={() => onSpeak(showChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story))}
+              onClick={() => {
+                const textToSpeak = showChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story);
+                console.log('Modal - showChinese:', showChinese);
+                console.log('Modal - result.chineseStory:', result.chineseStory);
+                console.log('Modal - result.story:', result.story);
+                console.log('Modal - textToSpeak:', textToSpeak);
+                onSpeak(textToSpeak);
+              }}
               disabled={isSpeaking}
               className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
