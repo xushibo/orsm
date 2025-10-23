@@ -131,6 +131,10 @@ export function MobileCamera() {
         canvasHeight = videoRef.current.clientHeight || 1280;
       }
       
+      // 确保最小尺寸
+      if (canvasWidth < 100) canvasWidth = 720;
+      if (canvasHeight < 100) canvasHeight = 1280;
+      
       // 设置 canvas 尺寸
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
@@ -158,16 +162,37 @@ export function MobileCamera() {
       
       context.putImageData(imageData, 0, 0);
       
-      // 转换为 Blob（使用高质量设置）
+      // 转换为 Blob（Safari兼容版本）
       const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            console.log('Image enhancement applied, final size:', blob.size, 'bytes');
-            resolve(blob);
+        try {
+          // 使用Safari兼容的toBlob方法
+          if (canvas.toBlob) {
+            canvas.toBlob((blob) => {
+              if (blob) {
+                console.log('Image enhancement applied, final size:', blob.size, 'bytes');
+                resolve(blob);
+              } else {
+                reject(new Error('Failed to create image blob - toBlob returned null'));
+              }
+            }, 'image/jpeg', 0.8); // 降低质量以提高兼容性
           } else {
-            reject(new Error('Failed to create image blob'));
+            // 如果toBlob不可用，使用dataURL方法
+            const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+            const byteString = atob(dataURL.split(',')[1]);
+            const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+              ia[i] = byteString.charCodeAt(i);
+            }
+            const blob = new Blob([ab], { type: mimeString });
+            console.log('Image created via dataURL, size:', blob.size, 'bytes');
+            resolve(blob);
           }
-        }, 'image/jpeg', 0.95); // 提高质量到0.95
+        } catch (error) {
+          console.error('Canvas toBlob error:', error);
+          reject(new Error('Failed to create image blob: ' + (error instanceof Error ? error.message : 'Unknown error')));
+        }
       });
 
       console.log('=== Mobile Image Details ===');
@@ -180,6 +205,17 @@ export function MobileCamera() {
         clientWidth: videoRef.current.clientWidth,
         clientHeight: videoRef.current.clientHeight
       });
+      
+      // 检查图片是否太小
+      if (blob.size < 10000) {
+        console.warn('WARNING: Image is very small (' + blob.size + ' bytes), this may cause recognition issues');
+      }
+      
+      // 检查图片类型
+      if (!blob.type.startsWith('image/')) {
+        console.error('ERROR: Invalid image type:', blob.type);
+      }
+      
       console.log('===========================');
 
       console.log('Image captured, sending to API...');
@@ -188,19 +224,46 @@ export function MobileCamera() {
       const formData = new FormData();
       formData.append('image', blob, 'mobile-capture.jpg');
 
+      console.log('=== Sending to API ===');
+      console.log('API URL:', API_CONFIG.baseUrl);
+      const imageFile = formData.get('image') as File;
+      console.log('FormData size:', imageFile?.size);
+      console.log('FormData type:', imageFile?.type);
+
       const response = await fetch(API_CONFIG.baseUrl, {
         method: 'POST',
         body: formData,
       });
 
+      console.log('=== API Response ===');
+      console.log('Status:', response.status);
+      console.log('Status Text:', response.statusText);
+      console.log('Headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        let errorMessage = `API error: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error('API Error Data:', errorData);
+          errorMessage = errorData.error || errorData.story || errorMessage;
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          try {
+            const errorText = await response.text();
+            console.error('API Error Text:', errorText);
+            errorMessage = errorText || errorMessage;
+          } catch (textError) {
+            console.error('Failed to get error text:', textError);
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const apiResult = await response.json();
       console.log('API result:', apiResult);
 
       if (!apiResult.word || !apiResult.story) {
+        console.error('Invalid API response structure:', apiResult);
         throw new Error('Invalid API response');
       }
 
@@ -210,7 +273,28 @@ export function MobileCamera() {
     } catch (err) {
       console.error('Capture error:', err);
       setIsProcessing(false);
-      alert(`识别失败: ${err instanceof Error ? err.message : '未知错误'}`);
+      
+      // 更详细的错误信息
+      let errorMessage = '未知错误';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        console.error('Error details:', {
+          name: err.name,
+          message: err.message,
+          stack: err.stack
+        });
+      }
+      
+      // 检查是否是网络错误
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        errorMessage = '网络连接失败，请检查网络连接或稍后重试';
+      } else if (errorMessage.includes('API error: 500')) {
+        errorMessage = '服务器内部错误，请稍后重试';
+      } else if (errorMessage.includes('API error: 400')) {
+        errorMessage = '图片格式不支持，请重新拍照';
+      }
+      
+      alert(`识别失败: ${errorMessage}`);
     }
   };
 

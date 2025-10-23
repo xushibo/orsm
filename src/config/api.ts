@@ -40,7 +40,7 @@ export function getApiConfig(): ApiConfig {
     NEXT_PUBLIC_USE_MOCK: process.env.NEXT_PUBLIC_USE_MOCK
   });
   
-  // 强制生产环境使用生产 API，除非明确设置使用模拟
+  // 生产环境：默认使用生产 API，除非明确设置使用模拟
   if (isProduction) {
     if (useMock) {
       console.log('Production with mock enabled, using mock API:', configs.mock.baseUrl);
@@ -51,14 +51,16 @@ export function getApiConfig(): ApiConfig {
     }
   }
   
-  // 开发环境逻辑
+  // 开发环境：优先使用模拟 API（如果设置了），否则使用开发 API
   if (useMock) {
     console.log('Development with mock enabled, using mock API:', configs.mock.baseUrl);
     return configs.mock;
   }
   
-  console.log('Using default API:', configs[env] || configs.development);
-  return configs[env] || configs.development;
+  // 默认使用对应环境的配置
+  const config = configs[env] || configs.development;
+  console.log('Using default API for', env, ':', config.baseUrl);
+  return config;
 }
 
 export const API_CONFIG = getApiConfig();
