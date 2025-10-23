@@ -235,6 +235,8 @@ export function MobileCamera() {
       if (stream && videoRef.current) {
         const video = videoRef.current;
         
+        console.log('Reinitializing video stream...');
+        
         // 完全停止当前视频
         video.pause();
         video.srcObject = null;
@@ -243,6 +245,8 @@ export function MobileCamera() {
         setTimeout(() => {
           if (stream && videoRef.current) {
             const video = videoRef.current;
+            
+            console.log('Setting video stream again...');
             
             // 重新设置视频流
             video.srcObject = stream;
@@ -267,7 +271,7 @@ export function MobileCamera() {
               }, 200);
             });
           }
-        }, 150);
+        }, 200);
       }
     };
     
@@ -275,7 +279,10 @@ export function MobileCamera() {
     reinitializeVideo();
     
     // 备用重新初始化，防止第一次失败
-    setTimeout(reinitializeVideo, 300);
+    setTimeout(reinitializeVideo, 500);
+    
+    // 第三次尝试，确保视频恢复
+    setTimeout(reinitializeVideo, 1000);
   };
 
   // 当stream变化时，确保video元素正确设置

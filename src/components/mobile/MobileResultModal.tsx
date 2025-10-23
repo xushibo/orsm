@@ -230,11 +230,26 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
           {onSpeak && (
             <button
               onClick={() => {
-                const textToSpeak = showChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story);
+                let textToSpeak;
+                if (showChinese) {
+                  // 优先使用AI生成的中文故事
+                  if (result.chineseStory && !result.chineseStory.includes('这是一个关于') && !result.chineseStory.includes('的有趣故事')) {
+                    textToSpeak = cleanChineseText(result.chineseStory);
+                  } else {
+                    // 使用静态翻译
+                    textToSpeak = cleanChineseText(getChineseStory(result.story));
+                  }
+                } else {
+                  textToSpeak = processStory(result.story);
+                }
+                
                 console.log('Modal - showChinese:', showChinese);
                 console.log('Modal - result.chineseStory:', result.chineseStory);
                 console.log('Modal - result.story:', result.story);
                 console.log('Modal - textToSpeak:', textToSpeak);
+                console.log('Modal - textToSpeak length:', textToSpeak.length);
+                console.log('Modal - textToSpeak first 50 chars:', textToSpeak.substring(0, 50));
+                
                 onSpeak(textToSpeak);
               }}
               disabled={isSpeaking}

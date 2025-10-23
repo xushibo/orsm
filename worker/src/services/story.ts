@@ -146,6 +146,12 @@ Chinese Story: [中文故事]`
       chineseName = objectName;
     }
     
+    // 如果中文故事是回退内容，尝试生成更好的翻译
+    if (chineseStory.includes('这是一个关于') && chineseStory.includes('的有趣故事')) {
+      console.log('Using fallback Chinese story, attempting to improve...');
+      // 可以在这里添加更好的回退逻辑
+    }
+    
     return {
       chineseName,
       chineseStory
