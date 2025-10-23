@@ -198,7 +198,10 @@ export function MobileCamera() {
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
+    
+    // 检测文本语言并设置相应的语言
+    const isChinese = /[\u4e00-\u9fff]/.test(text);
+    utterance.lang = isChinese ? 'zh-CN' : 'en-US';
     utterance.rate = 0.72; // 减慢20% (0.9 * 0.8 = 0.72)
     utterance.pitch = 1.0;
 

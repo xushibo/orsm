@@ -172,11 +172,11 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
             <div className="text-white text-xs mb-1 opacity-80">
               {showChinese ? '识别结果' : 'Recognition Result'}
             </div>
-            <div className="text-white text-2xl font-bold">
+            <div className={`text-white text-2xl font-bold ${showChinese ? 'font-chinese' : ''}`}>
               {showChinese ? (result.chineseName || getChineseTranslation(result.word)) : result.word}
             </div>
             {!showChinese && (result.chineseName || getChineseTranslation(result.word)) && (
-              <div className="text-white/80 text-sm mt-1 font-serif">
+              <div className="text-white/80 text-sm mt-1 font-chinese">
                 {result.chineseName || getChineseTranslation(result.word)}
               </div>
             )}
@@ -190,7 +190,7 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
               <div className="font-semibold text-blue-600 mb-1">
                 {showChinese ? '故事内容' : 'Story Content'}
               </div>
-              <div className={showChinese ? 'font-serif' : ''}>
+              <div className={showChinese ? 'font-chinese' : ''}>
                 {showChinese ? (result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
               </div>
             </div>

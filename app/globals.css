@@ -25,6 +25,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* 中文字体支持 */
+.font-chinese {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", "SimSun", "宋体", serif;
+}
+
 /* 移动端安全区域支持 */
 .pb-safe {
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
