@@ -2,16 +2,13 @@
 
 # dependencies
 /node_modules
+/worker/node_modules
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
 
 # testing
 /coverage
+/worker/coverage
 
 # next.js
 /.next/
@@ -28,14 +25,18 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# local env files
+.env*.local
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# wrangler
+/.wrangler
+
+# test images
+/test-images/

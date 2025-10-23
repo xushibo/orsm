@@ -33,6 +33,70 @@ export default {
       });
     }
 
+    // 添加健康检查端点
+    const url = new URL(request.url);
+    if (url.pathname === '/health') {
+      return new Response(JSON.stringify({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        aiBinding: !!env.AI
+      }), {
+        status: 200,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+
+    // 添加AI测试端点
+    if (url.pathname === '/test-ai') {
+      try {
+        if (!env.AI) {
+          return new Response(JSON.stringify({ error: 'AI binding not available' }), {
+            status: 500,
+            headers: { 
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            }
+          });
+        }
+
+        // 测试ResNet-50模型
+        const resnetTest = await env.AI.run('@cf/microsoft/resnet-50', {
+          image: new Uint8Array(100), // 空图像数据
+          top_k: 1
+        }).catch((err: any) => ({ error: err.message }));
+
+        // 测试CLIP模型
+        const clipTest = await env.AI.run('@cf/meta/clip', {
+          image: new Uint8Array(100), // 空图像数据
+          text: "a photo of an object"
+        }).catch((err: any) => ({ error: err.message }));
+
+        return new Response(JSON.stringify({ 
+          resnet: resnetTest,
+          clip: clipTest
+        }), {
+          status: 200,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        }), {
+          status: 500,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      }
+    }
+
     // 只允许 POST 请求
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -137,6 +201,15 @@ export default {
 
 async function callCloudflareAI(imageFile: File, env: Env): Promise<ApiResponse> {
   try {
+    // 检查AI绑定是否存在
+    if (!env.AI) {
+      console.error('AI binding is not available');
+      return {
+        word: "Error",
+        story: "AI service is not properly configured. Please contact the administrator."
+      };
+    }
+
     // 将图片转换为 base64
     const imageBuffer = await imageFile.arrayBuffer();
     const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
@@ -188,6 +261,11 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
   try {
     console.log('Attempting real AI image recognition...');
     
+    // 检查AI绑定
+    if (!env.AI) {
+      throw new Error('AI binding is not configured');
+    }
+    
     // 使用 Cloudflare Workers AI 的图像识别模型
     const imageArrayBuffer = await imageFile.arrayBuffer();
     const imageBytes = [...new Uint8Array(imageArrayBuffer)];
@@ -206,45 +284,47 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
     
     // 首先尝试ResNet-50
     console.log('Trying ResNet-50...');
-    const resnetResponse = await env.AI.run('@cf/microsoft/resnet-50', {
-      image: imageBytes,
-      top_k: 5
-    }).catch((err: any) => {
-      console.log('ResNet-50 failed:', err);
-      return null;
-    });
-    
-    if (resnetResponse && Array.isArray(resnetResponse) && resnetResponse.length > 0) {
-      console.log('ResNet-50 response:', JSON.stringify(resnetResponse, null, 2));
-      const topResult = resnetResponse[0];
-      const objectName = topResult.label || topResult.class_name || topResult.name;
-      const confidence = topResult.score || topResult.confidence || 0;
+    try {
+      const resnetResponse = await env.AI.run('@cf/microsoft/resnet-50', {
+        image: imageBytes,
+        top_k: 5
+      });
       
-      if (objectName && confidence > 0.1) {
-        console.log('ResNet-50 success:', { objectName, confidence });
-        aiResult = { objectName, confidence, source: 'resnet' };
+      if (resnetResponse && Array.isArray(resnetResponse) && resnetResponse.length > 0) {
+        console.log('ResNet-50 response:', JSON.stringify(resnetResponse, null, 2));
+        const topResult = resnetResponse[0];
+        const objectName = topResult.label || topResult.class_name || topResult.name;
+        const confidence = topResult.score || topResult.confidence || 0;
+        
+        if (objectName && confidence > 0.1) {
+          console.log('ResNet-50 success:', { objectName, confidence });
+          aiResult = { objectName, confidence, source: 'resnet' };
+        }
       }
+    } catch (resnetError) {
+      console.log('ResNet-50 failed:', resnetError);
     }
     
     // 如果ResNet-50失败，尝试CLIP
     if (!aiResult) {
       console.log('Trying CLIP...');
-      const clipResponse = await env.AI.run('@cf/meta/clip', {
-        image: imageBytes,
-        text: "a photo of an object"
-      }).catch((err: any) => {
-        console.log('CLIP failed:', err);
-        return null;
-      });
-      
-      if (clipResponse && typeof clipResponse === 'object') {
-        console.log('CLIP response:', JSON.stringify(clipResponse, null, 2));
-        const similarity = clipResponse.similarity || clipResponse.score || 0;
-        if (similarity > 0.1) {
-          const objectName = 'Object'; // CLIP返回相似度，我们使用通用名称
-          console.log('CLIP success:', { objectName, similarity });
-          aiResult = { objectName, confidence: similarity, source: 'clip' };
+      try {
+        const clipResponse = await env.AI.run('@cf/meta/clip', {
+          image: imageBytes,
+          text: "a photo of an object"
+        });
+        
+        if (clipResponse && typeof clipResponse === 'object') {
+          console.log('CLIP response:', JSON.stringify(clipResponse, null, 2));
+          const similarity = clipResponse.similarity || clipResponse.score || 0;
+          if (similarity > 0.1) {
+            const objectName = 'Object'; // CLIP返回相似度，我们使用通用名称
+            console.log('CLIP success:', { objectName, similarity });
+            aiResult = { objectName, confidence: similarity, source: 'clip' };
+          }
         }
+      } catch (clipError) {
+        console.log('CLIP failed:', clipError);
       }
     }
     
@@ -276,8 +356,8 @@ async function callRealAI(imageFile: File, env: Env): Promise<ApiResponse> {
   } catch (error) {
     console.error('AI processing failed:', error);
     return {
-      word: "Unknown",
-      story: "I'm sorry, but I couldn't clearly identify what's in this picture. Please try taking a clearer photo with better lighting and make sure the object is clearly visible."
+      word: "Error",
+      story: "I encountered an error while trying to identify the object in this picture. Please try again with a different photo."
     };
   }
 }

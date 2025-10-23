@@ -194,11 +194,35 @@ export function MobileCamera() {
       });
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        // 尝试解析错误响应
+        let errorMessage = `API error: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.story || errorMessage;
+        } catch {
+          // 如果无法解析JSON，使用文本响应
+          try {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
+          } catch {
+            // 忽略错误
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const apiResult = await response.json();
       console.log('API result:', apiResult);
+
+      // 检查是否是错误响应（后端返回了错误信息）
+      if (apiResult.error) {
+        throw new Error(apiResult.error);
+      }
+
+      // 检查是否是AI识别错误（word为"Error"）
+      if (apiResult.word === "Error") {
+        throw new Error(apiResult.story);
+      }
 
       if (!apiResult.word || !apiResult.story) {
         throw new Error('Invalid API response');

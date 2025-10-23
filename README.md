@@ -1,12 +1,12 @@
 # Object Recognition Story Machine
 
-一个基于 AI 的物体识别和故事生成应用，专为儿童设计。
+一个基于 AI 的物体识别和故事生成应用，专为 3 岁儿童设计。
 
 ## 🎯 功能特性
 
 - 📸 **实时相机捕获**: 使用设备摄像头实时拍摄物体
-- 🤖 **AI 识别**: 基于 AI 的物体识别
-- 📖 **故事生成**: 为识别的物体生成适合儿童的故事
+- 🤖 **AI 识别**: 基于 Google Gemini AI 的物体识别
+- 📖 **故事生成**: 为识别的物体生成适合 3 岁儿童的故事
 - 🎨 **卡通风格界面**: 半透明弹窗展示结果
 - 📱 **移动端优化**: 专为移动设备设计的响应式界面
 
@@ -45,6 +45,19 @@ npm run dev
 # 启动模拟后端服务器
 node mock-server.js
 ```
+
+### 本地开发测试
+项目提供了一个专门的本地开发测试环境，可以在dev-local分支上进行开发和测试：
+
+```bash
+# 切换到开发分支
+git checkout dev-local
+
+# 启动本地开发测试环境
+./scripts/dev-test.sh
+```
+
+这将自动启动前端和后端模拟服务，方便进行本地开发和测试。
 
 ### 测试集成
 ```bash
@@ -128,7 +141,14 @@ wrangler deploy
 
 ### 单元测试
 ```bash
+# 运行所有单元测试
 npm run test
+
+# 监听模式运行测试
+npm run test:watch
+
+# 生成测试覆盖率报告
+npm run test:coverage
 ```
 
 ### 集成测试
@@ -147,6 +167,23 @@ npm run test:api
 
 # 使用 curl 测试
 curl -X POST -F "image=@test-images/test.png" http://localhost:3001
+```
+
+### 自动化测试脚本
+项目提供了一个自动化测试脚本，可以运行不同类型的测试：
+
+```bash
+# 运行所有测试
+./scripts/test.sh --all
+
+# 仅运行单元测试
+./scripts/test.sh --unit
+
+# 仅运行集成测试
+./scripts/test.sh --integration
+
+# 仅运行Worker测试
+./scripts/test.sh --worker
 ```
 
 ## 📱 使用说明
