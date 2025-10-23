@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Deployment script for Object Recognition Story Machine
+# Deployment script for Story Machine
 # This script handles both frontend and backend deployment
 
 set -e
@@ -86,9 +86,9 @@ if [ "$DEPLOY_FRONTEND" = true ]; then
     if [ $? -eq 0 ]; then
         print_success "Frontend build completed successfully"
         
-        # Deploy to Cloudflare Pages
+        # Deploy to Cloudflare Pages using wrangler
         print_status "Deploying to Cloudflare Pages..."
-        npm run deploy
+        wrangler pages deploy out --project-name=orsm
         
         if [ $? -eq 0 ]; then
             print_success "Frontend deployed successfully to Cloudflare Pages"
@@ -142,7 +142,7 @@ fi
 
 print_success "Deployment process completed!"
 print_status "Frontend: https://orsm.xushibo.cn"
-print_status "Backend: https://orsm-ai-worker.xu57.workers.dev"
+print_status "Backend: https://orsm-ai.xushibo.cn"
 
 echo ""
 print_status "Next steps:"

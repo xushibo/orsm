@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Object Recognition Story Machine",
+  title: "Story Machine",
   description: "AI-powered object recognition and story generation app",
   appleWebApp: {
     capable: true,

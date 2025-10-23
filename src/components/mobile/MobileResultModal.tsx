@@ -50,13 +50,13 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
           <div className="w-12 h-12 mx-auto bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-xl mb-2">
             ✨
           </div>
-          <h2 className="text-lg font-bold text-gray-800">识别成功！</h2>
+          <h2 className="text-lg font-bold text-gray-800">Recognition Successful!</h2>
         </div>
 
         {/* 识别结果 - 突出显示 */}
         <div className="mb-4">
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-4 text-center">
-            <div className="text-white text-xs mb-1 opacity-80">识别结果</div>
+            <div className="text-white text-xs mb-1 opacity-80">Recognition Result</div>
             <div className="text-white text-2xl font-bold">{result.word}</div>
           </div>
         </div>
@@ -78,14 +78,14 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
               disabled={isSpeaking}
               className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
-              {isSpeaking ? '🔊 朗读中...' : '🔊 朗读故事'}
+              {isSpeaking ? '🔊 Reading...' : '🔊 Read Story'}
             </button>
           )}
           <button
             onClick={onClose}
             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg text-sm"
           >
-            📸 继续拍照
+            📸 Continue Capturing
           </button>
         </div>
       </div>

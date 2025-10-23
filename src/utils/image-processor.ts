@@ -3,6 +3,8 @@
  * 专门处理移动端Safari的图片捕获和优化
  */
 
+import { CANVAS_CONFIG, IMAGE_ENHANCEMENT } from './constants';
+
 export interface CaptureOptions {
   quality?: number;
   maxWidth?: number;
@@ -19,7 +21,7 @@ export interface ImageInfo {
 }
 
 const DEFAULT_OPTIONS: CaptureOptions = {
-  quality: 0.92,
+  quality: CANVAS_CONFIG.ENHANCED_QUALITY,
   maxWidth: 1920,
   maxHeight: 1080,
   enhanceContrast: true,
@@ -34,7 +36,7 @@ async function waitForVideoReady(video: HTMLVideoElement): Promise<void> {
     const timeout = setTimeout(() => {
       console.warn('Video ready timeout, proceeding anyway');
       resolve(); // 不抛出错误，继续执行
-    }, 8000); // 增加超时时间
+    }, 10000); // 使用常量中的超时时间
 
     const checkReady = () => {
       console.log('Video ready state check:', {
@@ -79,8 +81,8 @@ function getVideoActualDimensions(video: HTMLVideoElement): { width: number; hei
   // 如果videoWidth/videoHeight为0（Safari的常见问题）
   if (width === 0 || height === 0) {
     console.warn('Video dimensions are 0, using element dimensions');
-    width = video.clientWidth || video.offsetWidth || 1280;
-    height = video.clientHeight || video.offsetHeight || 720;
+    width = video.clientWidth || video.offsetWidth || CANVAS_CONFIG.FALLBACK_WIDTH;
+    height = video.clientHeight || video.offsetHeight || CANVAS_CONFIG.FALLBACK_HEIGHT;
   }
 
   console.log('Video dimensions:', { width, height, videoWidth: video.videoWidth, videoHeight: video.videoHeight });
@@ -104,9 +106,9 @@ function enhanceImage(
     console.log('Image dimensions:', width, 'x', height);
     console.log('Pixel data length:', data.length);
 
-    // 更强的对比度增强，适合移动端图片
-    const factor = 1.4; // 增加对比度因子
-    const brightness = 10; // 增加亮度
+    // 使用统一的图片增强参数
+    const factor = IMAGE_ENHANCEMENT.CONTRAST_FACTOR;
+    const brightness = IMAGE_ENHANCEMENT.BRIGHTNESS_OFFSET;
     
     for (let i = 0; i < data.length; i += 4) {
       // 增强对比度
@@ -226,7 +228,7 @@ export function getImageInfo(blob: Blob): ImageInfo {
 /**
  * 验证图片质量
  */
-export function validateImageQuality(blob: Blob, minSize: number = 1000): boolean {
+export function validateImageQuality(blob: Blob, minSize: number = IMAGE_ENHANCEMENT.MIN_SIZE_BYTES): boolean {
   console.log('Validating image quality:', {
     size: blob.size,
     type: blob.type,

@@ -5,7 +5,7 @@ export interface LoadingSpinnerProps {
   size?: 'small' | 'medium' | 'large';
 }
 
-export function LoadingSpinner({ message = 'AI 正在识别中...', size = 'medium' }: LoadingSpinnerProps) {
+export function LoadingSpinner({ message = 'AI is analyzing your image...', size = 'medium' }: LoadingSpinnerProps) {
   const sizeClasses = {
     small: 'w-8 h-8',
     medium: 'w-16 h-16',
@@ -34,7 +34,7 @@ export function LoadingSpinner({ message = 'AI 正在识别中...', size = 'medi
         
         {/* 加载文字 */}
         <h3 className="text-xl font-bold text-gray-800 mb-2">{message}</h3>
-        <p className="text-gray-600 text-sm mb-4">请稍候，我们正在分析您的图片</p>
+        <p className="text-gray-600 text-sm mb-4">Please wait while we analyze your image</p>
         
         {/* 进度指示器 */}
         <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
@@ -44,7 +44,7 @@ export function LoadingSpinner({ message = 'AI 正在识别中...', size = 'medi
           ></div>
         </div>
         
-        <div className="text-xs text-gray-500">这可能需要几秒钟时间</div>
+        <div className="text-xs text-gray-500">This may take a few seconds</div>
       </div>
     </div>
   );

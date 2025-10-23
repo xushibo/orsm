@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   },
   // 解决 Turbopack 警告
   turbopack: {
-    root: '/Users/bo/polyv/1024/object-recognition-story-machine'
+    root: process.cwd()
   }
 };
 

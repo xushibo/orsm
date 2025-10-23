@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Test - Story Machine</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success { background: rgba(76, 175, 80, 0.3); border-left: 4px solid #4CAF50; }
+        .error { background: rgba(244, 67, 54, 0.3); border-left: 4px solid #f44336; }
+        .info { background: rgba(33, 150, 243, 0.3); border-left: 4px solid #2196F3; }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #45a049; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Production Test Suite</h1>
+    <p>Testing Story Machine in production environment</p>
+
+    <div class="test-section">
+        <h2>📡 API Connectivity Tests</h2>
+        <button onclick="testAPIHealth()">Test API Health</button>
+        <button onclick="testCORS()">Test CORS</button>
+        <button onclick="testFileSizeLimit()">Test File Size Limit</button>
+        <div id="api-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🖼️ Image Recognition Test</h2>
+        <input type="file" id="imageInput" accept="image/*" onchange="testImageRecognition()">
+        <div id="recognition-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🌐 Frontend Integration Test</h2>
+        <button onclick="testFrontendIntegration()">Test Frontend Integration</button>
+        <div id="frontend-results"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://orsm-ai.xushibo.cn';
+        const FRONTEND_URL = 'https://49abfb61.orsm.pages.dev';
+
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            container.appendChild(div);
+        }
+
+        async function testAPIHealth() {
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.status === 400) {
+                    addResult('api-results', '✅ API is responding (400 expected for missing image)', 'success');
+                } else {
+                    addResult('api-results', `✅ API is responding (Status: ${response.status})`, 'success');
+                }
+            } catch (error) {
+                addResult('api-results', `❌ API connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCORS() {
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': FRONTEND_URL,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+                
+                const corsOrigin = response.headers.get('Access-Control-Allow-Origin');
+                const corsMethods = response.headers.get('Access-Control-Allow-Methods');
+                
+                if (corsOrigin && corsMethods) {
+                    addResult('api-results', `✅ CORS configured correctly (Origin: ${corsOrigin}, Methods: ${corsMethods})`, 'success');
+                } else {
+                    addResult('api-results', '❌ CORS headers missing', 'error');
+                }
+            } catch (error) {
+                addResult('api-results', `❌ CORS test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFileSizeLimit() {
+            try {
+                // Create a large file (15MB)
+                const largeBlob = new Blob([new ArrayBuffer(15 * 1024 * 1024)], { type: 'image/jpeg' });
+                const formData = new FormData();
+                formData.append('image', largeBlob, 'large-test.jpg');
+
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.error && result.error.includes('too large')) {
+                    addResult('api-results', '✅ File size limit working correctly', 'success');
+                } else {
+                    addResult('api-results', '❌ File size limit not working', 'error');
+                }
+            } catch (error) {
+                addResult('api-results', `❌ File size test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testImageRecognition() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                addResult('recognition-results', '❌ No file selected', 'error');
+                return;
+            }
+
+            addResult('recognition-results', `🔄 Testing image recognition for: ${file.name} (${(file.size / 1024).toFixed(1)}KB)`, 'info');
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.word && result.story) {
+                    addResult('recognition-results', `✅ Recognition successful!<br><strong>Object:</strong> ${result.word}<br><strong>Story:</strong> ${result.story}`, 'success');
+                } else {
+                    addResult('recognition-results', `❌ Recognition failed: ${result.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                addResult('recognition-results', `❌ Recognition test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFrontendIntegration() {
+            try {
+                const response = await fetch(FRONTEND_URL);
+                
+                if (response.ok) {
+                    addResult('frontend-results', '✅ Frontend is accessible', 'success');
+                    
+                    // Test if the page contains expected elements
+                    const text = await response.text();
+                    if (text.includes('Story Machine')) {
+                        addResult('frontend-results', '✅ Frontend content loaded correctly', 'success');
+                    } else {
+                        addResult('frontend-results', '⚠️ Frontend content may not be fully loaded', 'info');
+                    }
+                } else {
+                    addResult('frontend-results', `❌ Frontend returned status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult('frontend-results', `❌ Frontend test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run basic tests on page load
+        window.onload = function() {
+            addResult('api-results', '🚀 Starting production tests...', 'info');
+            testAPIHealth();
+            testCORS();
+            testFrontendIntegration();
+        };
+    </script>
+</body>
+</html>

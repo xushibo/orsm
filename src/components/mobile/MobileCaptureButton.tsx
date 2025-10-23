@@ -35,8 +35,8 @@ export function MobileCaptureButton({ onCapture, disabled = false }: MobileCaptu
         
         {/* 拍照提示文字 */}
         <div className="mt-4 text-center pointer-events-none">
-          <div className="text-white text-sm font-medium mb-1">点击拍照</div>
-          <div className="text-white/70 text-xs">AI 将识别物品并创作故事</div>
+          <div className="text-white text-sm font-medium mb-1">Tap to Capture</div>
+          <div className="text-white/70 text-xs">AI will identify objects and create stories</div>
         </div>
       </div>
     </div>

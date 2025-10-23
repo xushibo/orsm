@@ -1,4 +1,4 @@
-# Object Recognition Story Machine
+# Story Machine
 
 一个基于 AI 的物体识别和故事生成应用，专为儿童设计。
 
