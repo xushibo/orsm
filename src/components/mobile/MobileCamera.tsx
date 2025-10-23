@@ -199,7 +199,7 @@ export function MobileCamera() {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'zh-CN';
-    utterance.rate = 0.9;
+    utterance.rate = 0.72; // 减慢20% (0.9 * 0.8 = 0.72)
     utterance.pitch = 1.0;
 
     utterance.onend = () => setIsSpeaking(false);
@@ -217,6 +217,20 @@ export function MobileCamera() {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     }
+    // 确保相机重新显示
+    setTimeout(() => {
+      if (stream && videoRef.current) {
+        videoRef.current.play().catch(console.warn);
+        // 强制重新渲染视频
+        const video = videoRef.current;
+        const currentSrc = video.srcObject;
+        video.srcObject = null;
+        setTimeout(() => {
+          video.srcObject = currentSrc;
+          video.play().catch(console.warn);
+        }, 100);
+      }
+    }, 100);
   };
 
   // 当stream变化时，确保video元素正确设置
