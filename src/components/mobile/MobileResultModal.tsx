@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface AIResult {
   word: string;
@@ -19,11 +19,74 @@ interface MobileResultModalProps {
 
 export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false, showChinese = false }: MobileResultModalProps) {
   const [internalShowChinese, setInternalShowChinese] = useState(showChinese);
+  const storyContentRef = useRef<HTMLDivElement>(null);
+  const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // 同步外部传入的showChinese状态
   useEffect(() => {
     setInternalShowChinese(showChinese);
   }, [showChinese]);
+
+  // 获取中文故事 - 使用useCallback避免重复创建
+  const getChineseStory = useCallback((story: string): string => {
+    // 简单的中文故事生成逻辑
+    const chineseStory = story.replace(/I can see/g, '我可以看到')
+      .replace(/in this picture/g, '在这张图片中')
+      .replace(/It's something interesting/g, '这是一个有趣的东西')
+      .replace(/that tells its own story/g, '它讲述着自己的故事');
+    return chineseStory;
+  }, []);
+
+  // 自动滚动功能
+  useEffect(() => {
+    if (isSpeaking && storyContentRef.current) {
+      const scrollContainer = storyContentRef.current;
+      const scrollHeight = scrollContainer.scrollHeight;
+      const clientHeight = scrollContainer.clientHeight;
+      const maxScroll = scrollHeight - clientHeight;
+      
+      if (maxScroll > 0) {
+        // 计算滚动时间（基于文本长度，大约每100字符1秒）
+        const textLength = internalShowChinese 
+          ? (result.chineseStory || getChineseStory(result.story)).length
+          : result.story.length;
+        const scrollDuration = Math.max(3000, (textLength / 100) * 1000); // 最少3秒
+        
+        const startTime = Date.now();
+        
+        const scrollStep = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / scrollDuration, 1);
+          
+          // 使用缓动函数，开始快，结束慢
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+          const scrollTop = maxScroll * easeOut;
+          
+          scrollContainer.scrollTop = scrollTop;
+          
+          if (progress < 1 && isSpeaking) {
+            scrollIntervalRef.current = setTimeout(scrollStep, 16); // 60fps
+          }
+        };
+        
+        scrollStep();
+      }
+    } else {
+      // 停止滚动
+      if (scrollIntervalRef.current) {
+        clearTimeout(scrollIntervalRef.current);
+        scrollIntervalRef.current = null;
+      }
+    }
+    
+    // 清理函数
+    return () => {
+      if (scrollIntervalRef.current) {
+        clearTimeout(scrollIntervalRef.current);
+        scrollIntervalRef.current = null;
+      }
+    };
+  }, [isSpeaking, internalShowChinese, result.chineseStory, result.story, getChineseStory]);
   // 获取中文翻译
   const getChineseTranslation = (word: string): string => {
     const translations: { [key: string]: string } = {
@@ -106,7 +169,8 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
     return translations[word.toLowerCase()] || word;
   };
 
-  // 获取中文故事翻译
+  // 获取中文故事翻译 - 删除重复定义，使用上面的useCallback版本
+  /*
   const getChineseStory = (story: string): string => {
     const storyTranslations: { [key: string]: string } = {
       "I'm sorry, but I couldn't clearly identify what's in this picture. Please try taking a clearer photo with better lighting and make sure the object is clearly visible.": "抱歉，我无法清楚地识别图片中的内容。请尝试拍摄更清晰的照片，确保光线充足，物体清晰可见。",
@@ -149,6 +213,12 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
       .trim();
     
     return cleanedStory || story;
+  };
+  */
+
+  // 处理英文故事文本
+  const processStory = (story: string): string => {
+    return story;
   };
 
   // 清理中文文本，移除拼音注释和解释
@@ -233,7 +303,10 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
                 <span className="text-lg mr-2">📚</span>
                 {internalShowChinese ? '🎭 魔法故事 🎭' : '🎭 Magic Story 🎭'}
               </div>
-              <div className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''} text-sm leading-relaxed bg-white/60 rounded-xl p-3`}>
+              <div 
+                ref={storyContentRef}
+                className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''} text-sm leading-relaxed bg-white/60 rounded-xl p-3 scroll-smooth`}
+              >
                 {internalShowChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
               </div>
             </div>
