@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 
 interface AIResult {
   word: string;
@@ -17,6 +18,12 @@ interface MobileResultModalProps {
 }
 
 export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false, showChinese = false }: MobileResultModalProps) {
+  const [internalShowChinese, setInternalShowChinese] = useState(showChinese);
+  
+  // 同步外部传入的showChinese状态
+  useEffect(() => {
+    setInternalShowChinese(showChinese);
+  }, [showChinese]);
   // 获取中文翻译
   const getChineseTranslation = (word: string): string => {
     const translations: { [key: string]: string } = {
@@ -212,10 +219,10 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
           <div className="bg-white/80 rounded-xl p-3 border border-white/50">
             <div className="text-gray-700 text-sm leading-relaxed text-left">
               <div className="font-semibold text-blue-600 mb-1">
-                {showChinese ? '故事内容' : 'Story Content'}
+                {internalShowChinese ? '故事内容' : 'Story Content'}
               </div>
-              <div className={showChinese ? 'font-chinese' : ''}>
-                {showChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
+              <div className={internalShowChinese ? 'font-chinese' : ''}>
+                {internalShowChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
               </div>
             </div>
           </div>
@@ -223,11 +230,19 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
 
         {/* 操作按钮 */}
         <div className="space-y-2">
+          {/* 语言切换按钮 */}
+          <button
+            onClick={() => setInternalShowChinese(!internalShowChinese)}
+            className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white px-4 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-200 shadow-lg text-sm"
+          >
+            {internalShowChinese ? '🇺🇸 Switch to English' : '🇨🇳 切换到中文'}
+          </button>
+          
           {onSpeak && (
             <button
               onClick={() => {
                 let textToSpeak;
-                if (showChinese) {
+                if (internalShowChinese) {
                   // 优先使用API返回的中文故事
                   if (result.chineseStory) {
                     textToSpeak = cleanChineseText(result.chineseStory);
@@ -239,7 +254,7 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
                   textToSpeak = processStory(result.story);
                 }
                 
-                console.log('Modal - showChinese:', showChinese);
+                console.log('Modal - internalShowChinese:', internalShowChinese);
                 console.log('Modal - result.chineseStory:', result.chineseStory);
                 console.log('Modal - textToSpeak:', textToSpeak);
                 console.log('Modal - textToSpeak has Chinese:', /[\u4e00-\u9fff]/.test(textToSpeak));
@@ -249,7 +264,7 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
               disabled={isSpeaking}
               className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
-              {isSpeaking ? '🔊 Reading...' : (showChinese ? '🔊 朗读故事' : '🔊 Read Story')}
+              {isSpeaking ? '🔊 Reading...' : (internalShowChinese ? '🔊 朗读故事' : '🔊 Read Story')}
             </button>
           )}
           <button
