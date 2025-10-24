@@ -131,7 +131,10 @@ export async function generateChineseTranslation(objectName: string, englishStor
   const upperObjectName = objectName.toUpperCase();
   if (staticTranslations[upperObjectName]) {
     console.log('Using static translation for:', objectName);
-    return staticTranslations[upperObjectName];
+    return {
+      chineseName: staticTranslations[upperObjectName].name,
+      chineseStory: staticTranslations[upperObjectName].story
+    };
   }
   
   // 如果没有静态翻译，尝试AI翻译
@@ -173,7 +176,7 @@ Chinese Story: [中文故事]`
     
     // 如果还是没有匹配，尝试提取第一行作为名称，其余作为故事
     if (!chineseNameMatch && !chineseStoryMatch) {
-      const lines = response.split('\n').filter(line => line.trim());
+      const lines = response.split('\n').filter((line: string) => line.trim());
       if (lines.length >= 2) {
         chineseNameMatch = [null, lines[0].trim()];
         chineseStoryMatch = [null, lines.slice(1).join('\n').trim()];

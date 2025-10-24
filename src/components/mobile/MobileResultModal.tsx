@@ -232,11 +232,11 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
               onClick={() => {
                 let textToSpeak;
                 if (showChinese) {
-                  // 优先使用AI生成的中文故事
-                  if (result.chineseStory && !result.chineseStory.includes('这是一个关于') && !result.chineseStory.includes('的有趣故事')) {
+                  // 优先使用API返回的中文故事
+                  if (result.chineseStory) {
                     textToSpeak = cleanChineseText(result.chineseStory);
                   } else {
-                    // 使用静态翻译
+                    // 使用静态翻译作为后备
                     textToSpeak = cleanChineseText(getChineseStory(result.story));
                   }
                 } else {
@@ -245,10 +245,8 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
                 
                 console.log('Modal - showChinese:', showChinese);
                 console.log('Modal - result.chineseStory:', result.chineseStory);
-                console.log('Modal - result.story:', result.story);
                 console.log('Modal - textToSpeak:', textToSpeak);
-                console.log('Modal - textToSpeak length:', textToSpeak.length);
-                console.log('Modal - textToSpeak first 50 chars:', textToSpeak.substring(0, 50));
+                console.log('Modal - textToSpeak has Chinese:', /[\u4e00-\u9fff]/.test(textToSpeak));
                 
                 onSpeak(textToSpeak);
               }}

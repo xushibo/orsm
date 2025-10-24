@@ -160,7 +160,15 @@ async function processImageWithAI(imageFile: File, env: Env): Promise<ApiRespons
           };
         }
         
-        const result = {
+        // 确保 chineseTranslation 不为 null
+        if (!chineseTranslation) {
+          chineseTranslation = {
+            chineseName: aiResult.objectName,
+            chineseStory: `这是一个关于${aiResult.objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`
+          };
+        }
+        
+        const result: ApiResponse = {
           word: aiResult.objectName,
           story: story,
           chineseName: chineseTranslation.chineseName,
