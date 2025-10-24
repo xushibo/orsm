@@ -224,7 +224,53 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
 
   // 处理英文故事文本
   const processStory = (story: string): string => {
-    return story;
+    if (!story) return story;
+    
+    // 移除常见的引导文字
+    const cleanedStory = story
+      .replace(/^Here is a simple story about .*? for a 3-year-old:\s*/i, '')
+      .replace(/^Here is a story about .*? for a 3-year-old:\s*/i, '')
+      .replace(/^Here's a simple story about .*? for a 3-year-old:\s*/i, '')
+      .replace(/^Here's a story about .*? for a 3-year-old:\s*/i, '')
+      .replace(/^Here is a simple story about .*?:\s*/i, '')
+      .replace(/^Here is a story about .*?:\s*/i, '')
+      .replace(/^Here's a simple story about .*?:\s*/i, '')
+      .replace(/^Here's a story about .*?:\s*/i, '')
+      .replace(/^Here is a simple story for a 3-year-old:\s*/i, '')
+      .replace(/^Here is a story for a 3-year-old:\s*/i, '')
+      .replace(/^Here's a simple story for a 3-year-old:\s*/i, '')
+      .replace(/^Here's a story for a 3-year-old:\s*/i, '')
+      .replace(/^Here is a simple story:\s*/i, '')
+      .replace(/^Here is a story:\s*/i, '')
+      .replace(/^Here's a simple story:\s*/i, '')
+      .replace(/^Here's a story:\s*/i, '')
+      .replace(/^Here is a simple story about .*? for children:\s*/i, '')
+      .replace(/^Here is a story about .*? for children:\s*/i, '')
+      .replace(/^Here's a simple story about .*? for children:\s*/i, '')
+      .replace(/^Here's a story about .*? for children:\s*/i, '')
+      .replace(/^Here is a simple story for children:\s*/i, '')
+      .replace(/^Here is a story for children:\s*/i, '')
+      .replace(/^Here's a simple story for children:\s*/i, '')
+      .replace(/^Here's a story for children:\s*/i, '')
+      .replace(/^Here is a simple story about .*? for kids:\s*/i, '')
+      .replace(/^Here is a story about .*? for kids:\s*/i, '')
+      .replace(/^Here's a simple story about .*? for kids:\s*/i, '')
+      .replace(/^Here's a story about .*? for kids:\s*/i, '')
+      .replace(/^Here is a simple story for kids:\s*/i, '')
+      .replace(/^Here is a story for kids:\s*/i, '')
+      .replace(/^Here's a simple story for kids:\s*/i, '')
+      .replace(/^Here's a story for kids:\s*/i, '')
+      .replace(/^Here is a simple story about .*? for young children:\s*/i, '')
+      .replace(/^Here is a story about .*? for young children:\s*/i, '')
+      .replace(/^Here's a simple story about .*? for young children:\s*/i, '')
+      .replace(/^Here's a story about .*? for young children:\s*/i, '')
+      .replace(/^Here is a simple story for young children:\s*/i, '')
+      .replace(/^Here is a story for young children:\s*/i, '')
+      .replace(/^Here's a simple story for young children:\s*/i, '')
+      .replace(/^Here's a story for young children:\s*/i, '')
+      .trim();
+    
+    return cleanedStory || story;
   };
 
   // 清理中文文本，移除拼音注释和解释
