@@ -142,12 +142,14 @@ async function processImageWithAI(imageFile: File, env: Env): Promise<ApiRespons
     // 如果AI识别成功，生成故事和中文翻译
     if (aiResult && aiResult.objectName) {
       console.log('AI recognition successful:', aiResult);
+      console.log('Object name:', aiResult.objectName);
       try {
         const story = await generateChildStory(aiResult.objectName, env);
         
         // 生成中文翻译
         let chineseTranslation = null;
         try {
+          console.log('Calling generateChineseTranslation with:', aiResult.objectName, story.substring(0, 100));
           chineseTranslation = await generateChineseTranslation(aiResult.objectName, story, env);
           console.log('Chinese translation generated:', chineseTranslation);
         } catch (translationError) {
@@ -165,7 +167,10 @@ async function processImageWithAI(imageFile: File, env: Env): Promise<ApiRespons
           chineseStory: chineseTranslation.chineseStory
         };
         
-        console.log('Final result:', result);
+        console.log('Final result:', JSON.stringify(result, null, 2));
+        console.log('Result keys:', Object.keys(result));
+        console.log('Chinese fields present:', 'chineseName' in result, 'chineseStory' in result);
+        
         return result;
       } catch (storyError) {
         console.log('Story generation failed, using fallback:', storyError);
