@@ -139,40 +139,21 @@ async function processImageWithAI(imageFile: File, env: Env): Promise<ApiRespons
     // 尝试AI模型识别
     const aiResult = await recognizeImage(imageBytes, env);
     
-    // 如果AI识别成功，生成故事和中文翻译
+    // 如果AI识别成功，生成故事
     if (aiResult && aiResult.objectName) {
       console.log('AI recognition successful:', aiResult);
       console.log('Object name:', aiResult.objectName);
+      console.log('Chinese name:', aiResult.chineseName);
+      console.log('Chinese story:', aiResult.chineseStory);
+      
       try {
         const story = await generateChildStory(aiResult.objectName, env);
-        
-        // 生成中文翻译
-        let chineseTranslation = null;
-        try {
-          console.log('Calling generateChineseTranslation with:', aiResult.objectName, story.substring(0, 100));
-          chineseTranslation = await generateChineseTranslation(aiResult.objectName, story, env);
-          console.log('Chinese translation generated:', chineseTranslation);
-        } catch (translationError) {
-          console.log('Chinese translation failed, using fallback:', translationError);
-          chineseTranslation = {
-            chineseName: aiResult.objectName,
-            chineseStory: `这是一个关于${aiResult.objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`
-          };
-        }
-        
-        // 确保 chineseTranslation 不为 null
-        if (!chineseTranslation) {
-          chineseTranslation = {
-            chineseName: aiResult.objectName,
-            chineseStory: `这是一个关于${aiResult.objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`
-          };
-        }
         
         const result: ApiResponse = {
           word: aiResult.objectName,
           story: story,
-          chineseName: chineseTranslation.chineseName,
-          chineseStory: chineseTranslation.chineseStory
+          chineseName: aiResult.chineseName || aiResult.objectName,
+          chineseStory: aiResult.chineseStory || `这是一个关于${aiResult.objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`
         };
         
         console.log('Final result:', JSON.stringify(result, null, 2));
@@ -185,8 +166,8 @@ async function processImageWithAI(imageFile: File, env: Env): Promise<ApiRespons
         return {
           word: aiResult.objectName,
           story: `I can see a ${aiResult.objectName.toLowerCase()} in this picture. It's something interesting that tells its own story.`,
-          chineseName: aiResult.objectName,
-          chineseStory: `这是一个关于${aiResult.objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`
+          chineseName: aiResult.chineseName || aiResult.objectName,
+          chineseStory: aiResult.chineseStory || `这是一个关于${aiResult.objectName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`
         };
       }
     }
