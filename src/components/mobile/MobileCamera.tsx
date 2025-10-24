@@ -189,8 +189,29 @@ export function MobileCamera() {
     }
   };
 
+  // Safari语音加载辅助函数
+  const loadVoicesForSafari = (): Promise<SpeechSynthesisVoice[]> => {
+    return new Promise((resolve) => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        resolve(voices);
+      } else {
+        // Safari需要等待语音加载
+        const checkVoices = () => {
+          const voices = window.speechSynthesis.getVoices();
+          if (voices.length > 0) {
+            resolve(voices);
+          } else {
+            setTimeout(checkVoices, 100);
+          }
+        };
+        checkVoices();
+      }
+    });
+  };
+
   // 朗读故事
-  const speakText = (text: string) => {
+  const speakText = async (text: string) => {
     if (isSpeaking) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
@@ -201,27 +222,76 @@ export function MobileCamera() {
     console.log('Text length:', text.length);
     console.log('First 50 chars:', text.substring(0, 50));
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // 检测文本语言并设置相应的语言
+    // 检测文本语言
     const isChinese = /[\u4e00-\u9fff]/.test(text);
     console.log('Is Chinese text:', isChinese);
     console.log('Chinese characters found:', text.match(/[\u4e00-\u9fff]/g));
     
-    utterance.lang = isChinese ? 'zh-CN' : 'en-US';
-    utterance.rate = 0.72; // 减慢20% (0.9 * 0.8 = 0.72)
-    utterance.pitch = 1.0;
+    // 检测Safari浏览器
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    console.log('Is Safari:', isSafari);
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Safari特殊处理
+    if (isSafari && isChinese) {
+      // Safari中文朗读需要特殊设置
+      utterance.lang = 'zh-CN';
+      utterance.rate = 0.6; // Safari中文朗读速度更慢
+      utterance.pitch = 0.8; // 降低音调
+      utterance.volume = 0.9;
+      
+      // 异步获取中文语音
+      loadVoicesForSafari().then(voices => {
+        const chineseVoice = voices.find(voice => 
+          voice.lang.startsWith('zh') || 
+          voice.name.includes('Chinese') ||
+          voice.name.includes('中文')
+        );
+        
+        if (chineseVoice) {
+          utterance.voice = chineseVoice;
+          console.log('Using Chinese voice:', chineseVoice.name);
+        }
+        
+        // 延迟开始朗读
+        setTimeout(() => {
+          window.speechSynthesis.speak(utterance);
+        }, 200);
+      });
+      
+      return; // 提前返回，避免执行下面的代码
+    } else {
+      // 非Safari或英文内容
+      utterance.lang = isChinese ? 'zh-CN' : 'en-US';
+      utterance.rate = 0.72; // 减慢20% (0.9 * 0.8 = 0.72)
+      utterance.pitch = 1.0;
+    }
 
     console.log('Speech language set to:', utterance.lang);
+    console.log('Speech rate:', utterance.rate);
+    console.log('Speech pitch:', utterance.pitch);
 
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onstart = () => {
+      console.log('Speech started');
+      setIsSpeaking(true);
+    };
+    
+    utterance.onend = () => {
+      console.log('Speech ended');
+      setIsSpeaking(false);
+    };
+    
+    utterance.onerror = (event) => {
+      console.error('Speech error:', event.error);
+      setIsSpeaking(false);
+    };
 
+    // 开始朗读（非Safari中文情况）
     window.speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
   };
 
-  // 关闭结果
+  // 关闭结果 - 通过跳转到结果页面再返回来解决黑屏问题
   const closeResult = () => {
     setShowResult(false);
     setResult(null);
@@ -230,59 +300,10 @@ export function MobileCamera() {
       setIsSpeaking(false);
     }
     
-    // 强制重新初始化视频流
-    const reinitializeVideo = () => {
-      if (stream && videoRef.current) {
-        const video = videoRef.current;
-        
-        console.log('Reinitializing video stream...');
-        
-        // 完全停止当前视频
-        video.pause();
-        video.srcObject = null;
-        
-        // 等待一小段时间后重新设置
-        setTimeout(() => {
-          if (stream && videoRef.current) {
-            const video = videoRef.current;
-            
-            console.log('Setting video stream again...');
-            
-            // 重新设置视频流
-            video.srcObject = stream;
-            
-            // 重新设置所有属性
-            video.muted = true;
-            video.playsInline = true;
-            video.setAttribute('playsinline', '');
-            video.setAttribute('webkit-playsinline', '');
-            video.style.width = '100%';
-            video.style.height = '100%';
-            video.style.objectFit = 'cover';
-            video.style.backgroundColor = '#000';
-            
-            // 强制播放
-            video.load();
-            video.play().catch((error) => {
-              console.warn('Video play failed:', error);
-              // 如果播放失败，尝试再次播放
-              setTimeout(() => {
-                video.play().catch(console.warn);
-              }, 200);
-            });
-          }
-        }, 200);
-      }
-    };
-    
-    // 立即尝试重新初始化
-    reinitializeVideo();
-    
-    // 备用重新初始化，防止第一次失败
-    setTimeout(reinitializeVideo, 500);
-    
-    // 第三次尝试，确保视频恢复
-    setTimeout(reinitializeVideo, 1000);
+    // 通过重新加载页面来彻底解决黑屏问题
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   // 当stream变化时，确保video元素正确设置
