@@ -482,11 +482,11 @@ export function MobileCamera() {
               }
             </p>
             
-            {/* 语言切换按钮 - 与结果页面样式相同 */}
+            {/* 语言切换按钮 - 放大一倍，缩短三分之一 */}
             <div className="mb-4">
               <button
                 onClick={toggleLanguage}
-                className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white px-3 py-2 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-200 shadow-lg text-xs"
+                className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white px-6 py-1.5 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-200 shadow-lg text-sm"
               >
                 {isChinese ? '🇺🇸 Switch to English' : '🇨🇳 切换到中文'}
               </button>
@@ -494,7 +494,7 @@ export function MobileCamera() {
             
             <button
               onClick={requestCamera}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg text-xs"
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-1.5 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg text-sm"
             >
               {isChinese ? '📸 启动相机' : '📸 Start Camera'}
             </button>
