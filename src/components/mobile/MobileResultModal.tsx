@@ -178,66 +178,76 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="flex-1 bg-gradient-to-br from-blue-50 to-purple-50 p-6 w-full h-full flex flex-col">
-        {/* 关闭按钮 */}
+      <div className="flex-1 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 p-6 w-full h-full flex flex-col">
+        {/* 关闭按钮 - 儿童友好设计 */}
         <div className="flex justify-end mb-4">
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center text-gray-600 transition-colors"
+            className="w-12 h-12 rounded-full bg-gradient-to-r from-red-400 to-pink-500 hover:from-red-500 hover:to-pink-600 flex items-center justify-center text-white transition-all duration-300 shadow-lg hover:scale-110"
           >
             ✕
           </button>
         </div>
 
-        {/* 成功图标 */}
+        {/* 成功图标 - 儿童友好设计 */}
         <div className="text-center mb-4">
-          <div className="w-12 h-12 mx-auto bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-xl mb-2">
-            ✨
+          <div className="relative">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white text-2xl mb-2 shadow-xl animate-bounce">
+              🎉
+            </div>
+            <div className="absolute -top-2 -right-2 text-2xl animate-pulse">✨</div>
+            <div className="absolute -bottom-2 -left-2 text-2xl animate-pulse delay-100">🌟</div>
           </div>
-            <h2 className="text-lg font-bold text-gray-800">
-              {showChinese ? '识别成功！' : 'Recognition Successful!'}
+            <h2 className="text-xl font-bold text-purple-800 drop-shadow-sm">
+              {showChinese ? '🎊 魔法成功！🎊' : '🎊 Magic Success! 🎊'}
             </h2>
         </div>
 
-        {/* 识别结果 - 突出显示 */}
+        {/* 识别结果 - 儿童友好设计 */}
         <div className="mb-4">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-4 text-center">
-            <div className="text-white text-xs mb-1 opacity-80">
-              {showChinese ? '识别结果' : 'Recognition Result'}
+          <div className="bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-500 rounded-3xl p-5 text-center shadow-xl border-4 border-white">
+            <div className="text-white text-sm mb-2 font-bold">
+              {showChinese ? '🔍 我发现了什么' : '🔍 What I Found'}
             </div>
-            <div className={`text-white text-2xl font-bold ${showChinese ? 'font-chinese' : ''}`}>
+            <div className={`text-white text-3xl font-bold ${showChinese ? 'font-chinese' : ''} drop-shadow-lg`}>
               {showChinese ? (result.chineseName || getChineseTranslation(result.word)) : result.word}
             </div>
             {!showChinese && (result.chineseName || getChineseTranslation(result.word)) && (
-              <div className="text-white/80 text-sm mt-1 font-chinese">
+              <div className="text-white/90 text-lg mt-2 font-chinese">
                 {result.chineseName || getChineseTranslation(result.word)}
               </div>
             )}
+            <div className="mt-3 flex justify-center space-x-2">
+              <span className="text-2xl animate-bounce">🎈</span>
+              <span className="text-2xl animate-bounce delay-100">🎪</span>
+              <span className="text-2xl animate-bounce delay-200">🎈</span>
+            </div>
           </div>
         </div>
 
-        {/* 故事内容 - 进一步缩小留白 */}
+        {/* 故事内容 - 儿童友好设计 */}
         <div className="flex-1 mb-4 min-h-0">
-          <div className="bg-white/80 rounded-lg p-2 border border-white/50 h-full">
-            <div className="text-gray-700 text-xs leading-tight text-left h-full flex flex-col">
-              <div className="font-semibold text-blue-600 mb-1 text-xs">
-                {internalShowChinese ? '故事内容' : 'Story Content'}
+          <div className="bg-gradient-to-br from-yellow-50 to-pink-50 rounded-2xl p-4 border-4 border-yellow-200 shadow-xl h-full">
+            <div className="text-purple-800 text-sm leading-relaxed text-left h-full flex flex-col">
+              <div className="font-bold text-pink-600 mb-3 text-sm flex items-center">
+                <span className="text-lg mr-2">📚</span>
+                {internalShowChinese ? '🎭 魔法故事 🎭' : '🎭 Magic Story 🎭'}
               </div>
-              <div className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''} text-xs leading-tight`}>
+              <div className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''} text-sm leading-relaxed bg-white/60 rounded-xl p-3`}>
                 {internalShowChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
               </div>
             </div>
           </div>
         </div>
 
-        {/* 操作按钮 - 固定高度，确保不被遮挡 */}
-        <div className="space-y-1 flex-shrink-0">
+        {/* 操作按钮 - 儿童友好设计 */}
+        <div className="space-y-3 flex-shrink-0">
           {/* 语言切换按钮 */}
           <button
             onClick={() => setInternalShowChinese(!internalShowChinese)}
-            className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white px-3 py-2 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-200 shadow-lg text-xs"
+            className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-3 rounded-2xl font-bold hover:from-yellow-500 hover:to-orange-600 transition-all duration-300 shadow-xl text-sm border-2 border-white/30 hover:scale-105"
           >
-            {internalShowChinese ? '🇺🇸 Switch to English' : '🇨🇳 切换到中文'}
+            {internalShowChinese ? '🌍 Switch to English' : '🌍 切换到中文'}
           </button>
           
           {onSpeak && (
@@ -264,16 +274,16 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
                 onSpeak(textToSpeak);
               }}
               disabled={isSpeaking}
-              className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-3 py-2 rounded-lg font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+              className="w-full bg-gradient-to-r from-green-400 to-blue-500 text-white px-4 py-3 rounded-2xl font-bold hover:from-green-500 hover:to-blue-600 transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm border-2 border-white/30 hover:scale-105"
             >
-              {isSpeaking ? '🔊 Reading...' : (internalShowChinese ? '🔊 朗读故事' : '🔊 Read Story')}
+              {isSpeaking ? '🔊 Reading...' : (internalShowChinese ? '🔊 听故事' : '🔊 Listen to Story')}
             </button>
           )}
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg text-xs"
+            className="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white px-4 py-3 rounded-2xl font-bold hover:from-pink-500 hover:to-purple-600 transition-all duration-300 shadow-xl text-sm border-2 border-white/30 hover:scale-105 animate-pulse"
           >
-            {showChinese ? '📸 继续拍照' : '📸 Continue Capturing'}
+            {showChinese ? '🚀 再拍一张！' : '🚀 Take Another!'}
           </button>
         </div>
       </div>

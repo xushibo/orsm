@@ -450,54 +450,89 @@ export function MobileCamera() {
             </div>
           </div>
 
-          {/* 拍照引导框 */}
+          {/* 拍照引导框 - 儿童友好设计 */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-64 h-64 border-2 border-white/50 rounded-2xl relative">
-              <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-white rounded-tl-lg"></div>
-              <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-white rounded-tr-lg"></div>
-              <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-white rounded-bl-lg"></div>
-              <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-white rounded-br-lg"></div>
+            <div className="w-72 h-72 border-4 border-yellow-300 rounded-3xl relative shadow-2xl bg-gradient-to-br from-yellow-100/20 to-orange-100/20">
+              {/* 可爱的角落装饰 */}
+              <div className="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-pink-400 rounded-tl-xl"></div>
+              <div className="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-pink-400 rounded-tr-xl"></div>
+              <div className="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-pink-400 rounded-bl-xl"></div>
+              <div className="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-pink-400 rounded-br-xl"></div>
               
+              {/* 中心引导内容 */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-white/80 text-center">
-                  <div className="text-2xl mb-2">📸</div>
-                  <div className="text-sm">Place object in frame</div>
+                <div className="text-white text-center">
+                  <div className="text-4xl mb-3 animate-bounce">📸</div>
+                  <div className="text-lg font-bold drop-shadow-lg">
+                    {isChinese ? '把东西放在框框里！' : 'Put your object here!'}
+                  </div>
+                  <div className="text-sm mt-2 opacity-90">
+                    {isChinese ? '✨ 准备变魔法啦！' : '✨ Ready for magic!'}
+                  </div>
                 </div>
               </div>
+              
+              {/* 可爱的装饰星星 */}
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-yellow-300 text-xl animate-pulse">⭐</div>
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-yellow-300 text-xl animate-pulse delay-100">⭐</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* 未授权状态 */}
+      {/* 未授权状态 - 儿童友好设计 */}
       {permissionState === 'prompt' && (
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center p-4">
           <div className="text-center w-full max-w-sm">
-            <div className="text-6xl mb-4">📷</div>
-            <h1 className="text-2xl font-bold text-white mb-2">Story Machine</h1>
-            <p className="text-white/80 mb-6">
-              {isChinese 
-                ? '拍照识别物体，获取AI生成的故事' 
-                : 'Take a photo to identify objects and get AI-generated stories'
-              }
-            </p>
+            {/* 可爱的相机图标和装饰 */}
+            <div className="relative mb-6">
+              <div className="text-8xl mb-2 animate-bounce">📷</div>
+              <div className="flex justify-center space-x-2">
+                <span className="text-2xl animate-pulse">✨</span>
+                <span className="text-2xl animate-pulse delay-100">🌟</span>
+                <span className="text-2xl animate-pulse delay-200">✨</span>
+              </div>
+            </div>
             
-            {/* 语言切换按钮 - 放大一倍，缩短三分之一 */}
+            {/* 儿童友好的标题 */}
+            <h1 className="text-3xl font-bold text-white mb-3 drop-shadow-lg">
+              {isChinese ? '🎭 故事魔法相机 🎭' : '🎭 Story Magic Camera 🎭'}
+            </h1>
+            
+            {/* 可爱的描述文字 */}
+            <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4 mb-6 border-2 border-white/30">
+              <p className="text-white text-lg font-medium leading-relaxed">
+                {isChinese 
+                  ? '📸 拍一拍，变魔法！\n🎨 让AI为你讲故事！' 
+                  : '📸 Take a photo, create magic!\n🎨 Let AI tell you a story!'
+                }
+              </p>
+            </div>
+            
+            {/* 语言切换按钮 - 儿童友好设计 */}
             <div className="mb-4">
               <button
                 onClick={toggleLanguage}
-                className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white px-6 py-1.5 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-200 shadow-lg text-sm"
+                className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-2xl font-bold hover:from-yellow-500 hover:to-orange-600 transition-all duration-300 shadow-xl text-lg border-2 border-white/30 hover:scale-105"
               >
-                {isChinese ? '🇺🇸 Switch to English' : '🇨🇳 切换到中文'}
+                {isChinese ? '🌍 Switch to English' : '🌍 切换到中文'}
               </button>
             </div>
             
+            {/* 开始按钮 - 儿童友好设计 */}
             <button
               onClick={requestCamera}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-1.5 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg text-sm"
+              className="w-full bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-4 rounded-2xl font-bold hover:from-green-500 hover:to-blue-600 transition-all duration-300 shadow-xl text-xl border-2 border-white/30 hover:scale-105 animate-pulse"
             >
-              {isChinese ? '📸 启动相机' : '📸 Start Camera'}
+              {isChinese ? '🚀 开始魔法之旅！' : '🚀 Start Magic Journey!'}
             </button>
+            
+            {/* 可爱的装饰元素 */}
+            <div className="mt-6 flex justify-center space-x-4">
+              <span className="text-2xl animate-bounce">🎈</span>
+              <span className="text-2xl animate-bounce delay-100">🎪</span>
+              <span className="text-2xl animate-bounce delay-200">🎈</span>
+            </div>
           </div>
         </div>
       )}
