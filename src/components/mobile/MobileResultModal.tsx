@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 
 interface AIResult {
   word: string;
@@ -14,10 +13,10 @@ interface MobileResultModalProps {
   onClose: () => void;
   onSpeak?: (text: string) => void;
   isSpeaking?: boolean;
+  showChinese?: boolean;
 }
 
-export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false }: MobileResultModalProps) {
-  const [showChinese, setShowChinese] = useState(false);
+export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false, showChinese = false }: MobileResultModalProps) {
   // 获取中文翻译
   const getChineseTranslation = (word: string): string => {
     const translations: { [key: string]: string } = {
@@ -224,14 +223,6 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
 
         {/* 操作按钮 */}
         <div className="space-y-2">
-          {/* 语言切换按钮 */}
-          <button
-            onClick={() => setShowChinese(!showChinese)}
-            className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white px-4 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-200 shadow-lg text-sm"
-          >
-            {showChinese ? '🇺🇸 Switch to English' : '🇨🇳 切换到中文'}
-          </button>
-          
           {onSpeak && (
             <button
               onClick={() => {

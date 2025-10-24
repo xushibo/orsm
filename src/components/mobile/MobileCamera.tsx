@@ -25,6 +25,7 @@ export function MobileCamera() {
   const [result, setResult] = useState<AIResult | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isChinese, setIsChinese] = useState(false);
 
   // 记录设备信息
   useEffect(() => {
@@ -291,6 +292,11 @@ export function MobileCamera() {
     window.speechSynthesis.speak(utterance);
   };
 
+  // 切换语言
+  const toggleLanguage = () => {
+    setIsChinese(!isChinese);
+  };
+
   // 关闭结果 - 通过跳转到结果页面再返回来解决黑屏问题
   const closeResult = () => {
     setShowResult(false);
@@ -440,7 +446,15 @@ export function MobileCamera() {
           <div className="absolute top-0 left-0 right-0 z-20 pt-safe">
             <div className="flex justify-between items-center px-4 py-2">
               <div className="text-white text-sm font-medium">📷 Photo Recognition</div>
-              <div className="text-white text-xs opacity-75">✅ Authorized</div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleLanguage}
+                  className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-white/30 transition-colors"
+                >
+                  {isChinese ? '中文' : 'EN'}
+                </button>
+                <div className="text-white text-xs opacity-75">✅ Authorized</div>
+              </div>
             </div>
           </div>
 
@@ -455,7 +469,7 @@ export function MobileCamera() {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-white/80 text-center">
                   <div className="text-2xl mb-2">📸</div>
-                  <div className="text-sm">Place object in frame</div>
+                  <div className="text-sm">{isChinese ? '将物体放在框内' : 'Place object in frame'}</div>
                 </div>
               </div>
             </div>
@@ -469,12 +483,17 @@ export function MobileCamera() {
           <div className="text-center">
             <div className="text-6xl mb-4">📷</div>
             <h1 className="text-2xl font-bold text-white mb-2">Story Machine</h1>
-            <p className="text-white/80 mb-6">Take a photo to identify objects and get AI-generated stories</p>
+            <p className="text-white/80 mb-6">
+              {isChinese 
+                ? '拍照识别物体，获取AI生成的故事' 
+                : 'Take a photo to identify objects and get AI-generated stories'
+              }
+            </p>
             <button
               onClick={requestCamera}
               className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition-colors"
             >
-              Start Camera
+              {isChinese ? '启动相机' : 'Start Camera'}
             </button>
           </div>
         </div>
@@ -485,13 +504,20 @@ export function MobileCamera() {
         <div className="absolute inset-0 bg-red-900 flex items-center justify-center p-4">
           <div className="text-center text-white">
             <div className="text-6xl mb-4">🚫</div>
-            <h2 className="text-2xl font-bold mb-2">Camera Access Denied</h2>
-            <p className="mb-6">{error || 'Please allow camera access in your browser settings'}</p>
+            <h2 className="text-2xl font-bold mb-2">
+              {isChinese ? '相机访问被拒绝' : 'Camera Access Denied'}
+            </h2>
+            <p className="mb-6">
+              {error || (isChinese 
+                ? '请在浏览器设置中允许相机访问' 
+                : 'Please allow camera access in your browser settings'
+              )}
+            </p>
             <button
               onClick={requestCamera}
               className="bg-white text-red-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition-colors"
             >
-              Retry
+              {isChinese ? '重试' : 'Retry'}
             </button>
           </div>
         </div>
@@ -512,6 +538,7 @@ export function MobileCamera() {
           onClose={closeResult}
           onSpeak={speakText}
           isSpeaking={isSpeaking}
+          showChinese={isChinese}
         />
       )}
     </main>
