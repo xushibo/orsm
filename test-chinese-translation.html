@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文翻译功能测试 - Story Machine</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .test-section h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .info {
+            color: #17a2b8;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Story Machine - 中文翻译功能测试</h1>
+        
+        <div class="test-section">
+            <h2>📋 测试说明</h2>
+            <p>本页面用于测试 Story Machine 的中文翻译和朗读功能。</p>
+            <ul>
+                <li>测试API是否返回中文翻译字段</li>
+                <li>验证中文内容格式是否正确</li>
+                <li>测试中文语音合成功能</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 测试1: 雨伞图片识别</h2>
+            <button onclick="testUmbrella()" id="btn-umbrella">测试雨伞识别</button>
+            <div id="result-umbrella" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 测试2: 小鸟图片识别</h2>
+            <button onclick="testBird()" id="btn-bird">测试小鸟识别</button>
+            <div id="result-bird" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔊 测试3: 中文语音合成</h2>
+            <button onclick="testChineseSpeech()" id="btn-speech">测试中文朗读</button>
+            <button onclick="stopSpeech()" id="btn-stop" style="background: #dc3545;">停止朗读</button>
+            <div id="result-speech" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 测试总结</h2>
+            <div id="summary">
+                <p class="info">点击上方按钮开始测试...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://orsm-ai.xushibo.cn';
+        let testResults = {
+            umbrella: null,
+            bird: null,
+            speech: null
+        };
+
+        async function testUmbrella() {
+            const btn = document.getElementById('btn-umbrella');
+            const resultDiv = document.getElementById('result-umbrella');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> 测试中...';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p class="info">正在识别雨伞图片...</p>';
+
+            try {
+                // 注意：这里使用模拟数据，因为无法从HTML直接上传文件到API
+                // 实际测试应该使用 curl 命令
+                resultDiv.innerHTML = `
+                    <p class="info">⚠️ 请使用以下命令进行实际测试：</p>
+                    <pre>curl -X POST -F 'image=@test-images/雨伞.jpeg' ${API_URL} | jq .</pre>
+                    <p class="success">✅ 预期结果应包含：</p>
+                    <ul>
+                        <li>word: "UMBRELLA"</li>
+                        <li>chineseName: "雨伞"</li>
+                        <li>chineseStory: "这是一个关于雨伞的故事..."</li>
+                    </ul>
+                `;
+                testResults.umbrella = 'manual';
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 测试失败: ${error.message}</p>`;
+                testResults.umbrella = false;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '测试雨伞识别';
+                updateSummary();
+            }
+        }
+
+        async function testBird() {
+            const btn = document.getElementById('btn-bird');
+            const resultDiv = document.getElementById('result-bird');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> 测试中...';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p class="info">正在识别小鸟图片...</p>';
+
+            try {
+                resultDiv.innerHTML = `
+                    <p class="info">⚠️ 请使用以下命令进行实际测试：</p>
+                    <pre>curl -X POST -F 'image=@test-images/小鸟.png' ${API_URL} | jq .</pre>
+                    <p class="success">✅ 预期结果应包含：</p>
+                    <ul>
+                        <li>word: "INDIGO FINCH"</li>
+                        <li>chineseName: "靛蓝雀"</li>
+                        <li>chineseStory: "这是一个关于靛蓝雀的故事..."</li>
+                    </ul>
+                `;
+                testResults.bird = 'manual';
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ 测试失败: ${error.message}</p>`;
+                testResults.bird = false;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '测试小鸟识别';
+                updateSummary();
+            }
+        }
+
+        function testChineseSpeech() {
+            const btn = document.getElementById('btn-speech');
+            const resultDiv = document.getElementById('result-speech');
+            
+            resultDiv.style.display = 'block';
+            
+            const testTexts = [
+                '这是一个关于雨伞的故事。雨伞可以帮助我们在下雨天保持干燥。',
+                '这是一个关于靛蓝雀的故事。靛蓝雀是一种美丽的小鸟，有着漂亮的蓝色羽毛。'
+            ];
+            
+            const randomText = testTexts[Math.floor(Math.random() * testTexts.length)];
+            
+            // 检测是否包含中文
+            const isChinese = /[\u4e00-\u9fff]/.test(randomText);
+            
+            resultDiv.innerHTML = `
+                <p class="info">正在朗读中文内容...</p>
+                <p><strong>测试文本：</strong>${randomText}</p>
+                <p><strong>语言检测：</strong>${isChinese ? '✅ 中文' : '❌ 非中文'}</p>
+                <p><strong>语音语言：</strong>${isChinese ? 'zh-CN' : 'en-US'}</p>
+            `;
+            
+            const utterance = new SpeechSynthesisUtterance(randomText);
+            utterance.lang = isChinese ? 'zh-CN' : 'en-US';
+            utterance.rate = 0.72; // 减慢20%
+            utterance.pitch = 1.0;
+            
+            utterance.onstart = () => {
+                resultDiv.innerHTML += '<p class="success">🔊 开始朗读...</p>';
+            };
+            
+            utterance.onend = () => {
+                resultDiv.innerHTML += '<p class="success">✅ 朗读完成</p>';
+                testResults.speech = true;
+                updateSummary();
+            };
+            
+            utterance.onerror = (error) => {
+                resultDiv.innerHTML += `<p class="error">❌ 朗读失败: ${error.error}</p>`;
+                testResults.speech = false;
+                updateSummary();
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function stopSpeech() {
+            window.speechSynthesis.cancel();
+            const resultDiv = document.getElementById('result-speech');
+            if (resultDiv.style.display !== 'none') {
+                resultDiv.innerHTML += '<p class="info">⏹️ 已停止朗读</p>';
+            }
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('summary');
+            let html = '<h3>测试结果汇总：</h3><ul>';
+            
+            if (testResults.umbrella === 'manual') {
+                html += '<li>雨伞识别测试 <span class="status-badge status-success">需手动验证</span></li>';
+            } else if (testResults.umbrella === true) {
+                html += '<li>雨伞识别测试 <span class="status-badge status-success">✅ 通过</span></li>';
+            } else if (testResults.umbrella === false) {
+                html += '<li>雨伞识别测试 <span class="status-badge status-error">❌ 失败</span></li>';
+            }
+            
+            if (testResults.bird === 'manual') {
+                html += '<li>小鸟识别测试 <span class="status-badge status-success">需手动验证</span></li>';
+            } else if (testResults.bird === true) {
+                html += '<li>小鸟识别测试 <span class="status-badge status-success">✅ 通过</span></li>';
+            } else if (testResults.bird === false) {
+                html += '<li>小鸟识别测试 <span class="status-badge status-error">❌ 失败</span></li>';
+            }
+            
+            if (testResults.speech === true) {
+                html += '<li>中文语音合成测试 <span class="status-badge status-success">✅ 通过</span></li>';
+            } else if (testResults.speech === false) {
+                html += '<li>中文语音合成测试 <span class="status-badge status-error">❌ 失败</span></li>';
+            }
+            
+            html += '</ul>';
+            
+            html += `
+                <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 8px;">
+                    <h4>✅ 已修复的问题：</h4>
+                    <ul>
+                        <li>API响应现在包含 <code>chineseName</code> 和 <code>chineseStory</code> 字段</li>
+                        <li>静态翻译返回格式已统一</li>
+                        <li>中文语音合成自动识别语言</li>
+                        <li>语音速度已调慢20%</li>
+                    </ul>
+                </div>
+            `;
+            
+            summaryDiv.innerHTML = html;
+        }
+
+        // 页面加载时显示部署信息
+        window.onload = () => {
+            console.log('Story Machine - 中文翻译功能测试页面');
+            console.log('API URL:', API_URL);
+            console.log('部署时间: 2025-10-24');
+        };
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试中文翻译回退逻辑</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #17a2b8; }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 中文翻译回退逻辑测试</h1>
+        
+        <div class="test-section">
+            <h2>📋 测试说明</h2>
+            <p>这个页面测试新的中文翻译回退逻辑，验证MOUSE等物体的翻译质量。</p>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 测试MOUSE翻译</h2>
+            <button onclick="testMouseTranslation()">测试MOUSE翻译</button>
+            <div id="result-mouse" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 测试其他物体翻译</h2>
+            <button onclick="testOtherObjects()">测试其他物体</button>
+            <div id="result-others" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟回退逻辑函数
+        function getObjectType(objectName) {
+            const name = objectName.toLowerCase();
+            if (name.includes('mouse') || name.includes('cat') || name.includes('dog') || name.includes('bird')) {
+                return 'animal';
+            } else if (name.includes('car') || name.includes('phone') || name.includes('computer')) {
+                return 'technology';
+            } else if (name.includes('book') || name.includes('pen') || name.includes('pencil')) {
+                return 'education';
+            } else if (name.includes('apple') || name.includes('banana') || name.includes('food')) {
+                return 'food';
+            } else if (name.includes('ball') || name.includes('toy')) {
+                return 'toy';
+            } else {
+                return 'general';
+            }
+        }
+
+        function generateFallbackChineseName(objectName) {
+            const nameMap = {
+                'MOUSE': '鼠标',
+                'BOTTLE': '瓶子',
+                'PHONE': '手机',
+                'BOOK': '书',
+                'BALL': '球',
+                'APPLE': '苹果',
+                'COMPUTER': '电脑',
+                'KEYBOARD': '键盘',
+                'MONITOR': '显示器',
+                'CUP': '杯子',
+                'CHAIR': '椅子',
+                'TABLE': '桌子',
+                'LAMP': '台灯',
+                'CLOCK': '时钟',
+                'KEY': '钥匙',
+                'WATCH': '手表',
+                'CAMERA': '相机',
+                'BAG': '包',
+                'HAT': '帽子',
+                'SHOE': '鞋子'
+            };
+            
+            return nameMap[objectName.toUpperCase()] || objectName;
+        }
+
+        function generateFallbackChineseStory(objectName, objectType) {
+            const chineseName = generateFallbackChineseName(objectName);
+            
+            const stories = {
+                'animal': `这是一个关于${chineseName}的故事。${chineseName}是可爱的小动物，它们有自己的生活习性和特点。每个小动物都是独特的，教会我们如何爱护和尊重生命！`,
+                'technology': `这是一个关于${chineseName}的故事。${chineseName}是现代科技的重要工具，帮助我们学习、工作和娱乐。科技让我们的生活变得更加便利和有趣！`,
+                'education': `这是一个关于${chineseName}的故事。${chineseName}是学习的好伙伴，帮助我们获取知识和技能。学习让我们变得更聪明，更有智慧！`,
+                'food': `这是一个关于${chineseName}的故事。${chineseName}是美味的食物，不仅好吃还很有营养。健康的饮食让我们变得更强壮，更有活力！`,
+                'toy': `这是一个关于${chineseName}的故事。${chineseName}是很有趣的玩具，可以带给我们很多快乐。玩具让我们的童年更加丰富多彩！`,
+                'general': `这是一个关于${chineseName}的故事。${chineseName}是我们生活中的一部分，每个物品都有自己的用途和价值。让我们学会珍惜身边的每一件东西！`
+            };
+            
+            return stories[objectType] || `这是一个关于${chineseName}的有趣故事。让我们一起来探索这个奇妙的世界吧！`;
+        }
+
+        function testMouseTranslation() {
+            const resultDiv = document.getElementById('result-mouse');
+            resultDiv.style.display = 'block';
+            
+            const objectName = 'MOUSE';
+            const objectType = getObjectType(objectName);
+            const chineseName = generateFallbackChineseName(objectName);
+            const chineseStory = generateFallbackChineseStory(objectName, objectType);
+            
+            resultDiv.innerHTML = `
+                <h3>MOUSE翻译测试结果：</h3>
+                <p><strong>对象类型:</strong> ${objectType}</p>
+                <p><strong>中文名称:</strong> ${chineseName}</p>
+                <p><strong>中文故事:</strong></p>
+                <pre>${chineseStory}</pre>
+                
+                <h4>✅ 预期改进：</h4>
+                <ul>
+                    <li>中文名称应该是"鼠标"而不是"MOUSE"</li>
+                    <li>中文故事应该包含科技相关内容</li>
+                    <li>故事应该更具体，而不是通用回退内容</li>
+                </ul>
+                
+                <h4>🔍 分析：</h4>
+                <p>${chineseName === '鼠标' ? '✅ 中文名称正确' : '❌ 中文名称不正确'}</p>
+                <p>${chineseStory.includes('科技') ? '✅ 包含科技内容' : '❌ 缺少科技内容'}</p>
+                <p>${chineseStory.includes('鼠标') ? '✅ 包含鼠标相关内容' : '❌ 缺少鼠标相关内容'}</p>
+            `;
+        }
+
+        function testOtherObjects() {
+            const resultDiv = document.getElementById('result-others');
+            resultDiv.style.display = 'block';
+            
+            const testObjects = ['BOTTLE', 'PHONE', 'BOOK', 'BALL', 'APPLE'];
+            let html = '<h3>其他物体翻译测试：</h3>';
+            
+            testObjects.forEach(obj => {
+                const objectType = getObjectType(obj);
+                const chineseName = generateFallbackChineseName(obj);
+                const chineseStory = generateFallbackChineseStory(obj, objectType);
+                
+                html += `
+                    <div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                        <strong>${obj}:</strong><br>
+                        类型: ${objectType} | 中文名: ${chineseName}<br>
+                        故事: ${chineseStory.substring(0, 50)}...
+                    </div>
+                `;
+            });
+            
+            resultDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
