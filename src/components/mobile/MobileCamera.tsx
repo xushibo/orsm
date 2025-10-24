@@ -237,7 +237,7 @@ export function MobileCamera() {
     if (isSafari && isChinese) {
       // Safari中文朗读需要特殊设置
       utterance.lang = 'zh-CN';
-      utterance.rate = 0.6; // Safari中文朗读速度更慢
+      utterance.rate = 0.84; // Safari中文朗读速度：0.6 * 1.4 = 0.84 (快40%)
       utterance.pitch = 0.8; // 降低音调
       utterance.volume = 0.9;
       
@@ -264,7 +264,7 @@ export function MobileCamera() {
     } else {
       // 非Safari或英文内容
       utterance.lang = isChinese ? 'zh-CN' : 'en-US';
-      utterance.rate = 0.72; // 减慢20% (0.9 * 0.8 = 0.72)
+      utterance.rate = isChinese ? 1.008 : 0.72; // 中文快40%: 0.72 * 1.4 = 1.008, 英文保持0.72
       utterance.pitch = 1.0;
     }
 
