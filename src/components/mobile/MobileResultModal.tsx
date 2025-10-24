@@ -178,34 +178,34 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="flex-1 bg-gradient-to-br from-blue-50 to-purple-50 p-6 w-full h-full flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-blue-50 to-purple-50 p-4 w-full h-full flex flex-col">
         {/* 关闭按钮 */}
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-2">
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center text-gray-600 transition-colors"
+            className="w-8 h-8 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center text-gray-600 transition-colors"
           >
             ✕
           </button>
         </div>
 
         {/* 成功图标 */}
-        <div className="text-center mb-4">
-          <div className="w-12 h-12 mx-auto bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-xl mb-2">
+        <div className="text-center mb-3">
+          <div className="w-10 h-10 mx-auto bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-lg mb-1">
             ✨
           </div>
-            <h2 className="text-lg font-bold text-gray-800">
+            <h2 className="text-base font-bold text-gray-800">
               {showChinese ? '识别成功！' : 'Recognition Successful!'}
             </h2>
         </div>
 
         {/* 识别结果 - 突出显示 */}
-        <div className="mb-4">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-4 text-center">
+        <div className="mb-3">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-3 text-center">
             <div className="text-white text-xs mb-1 opacity-80">
               {showChinese ? '识别结果' : 'Recognition Result'}
             </div>
-            <div className={`text-white text-2xl font-bold ${showChinese ? 'font-chinese' : ''}`}>
+            <div className={`text-white text-xl font-bold ${showChinese ? 'font-chinese' : ''}`}>
               {showChinese ? (result.chineseName || getChineseTranslation(result.word)) : result.word}
             </div>
             {!showChinese && (result.chineseName || getChineseTranslation(result.word)) && (
@@ -217,25 +217,25 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
         </div>
 
         {/* 故事内容 */}
-        <div className="flex-1 mb-4">
-          <div className="bg-white/80 rounded-xl p-4 border border-white/50 h-full">
+        <div className="flex-1 mb-3 min-h-0">
+          <div className="bg-white/80 rounded-xl p-3 border border-white/50 h-full">
             <div className="text-gray-700 text-sm leading-relaxed text-left h-full flex flex-col">
-              <div className="font-semibold text-blue-600 mb-2">
+              <div className="font-semibold text-blue-600 mb-2 text-xs">
                 {internalShowChinese ? '故事内容' : 'Story Content'}
               </div>
-              <div className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''}`}>
+              <div className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''} text-xs`}>
                 {internalShowChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
               </div>
             </div>
           </div>
         </div>
 
-        {/* 操作按钮 */}
-        <div className="space-y-2">
+        {/* 操作按钮 - 固定高度，确保不被遮挡 */}
+        <div className="space-y-1 flex-shrink-0">
           {/* 语言切换按钮 */}
           <button
             onClick={() => setInternalShowChinese(!internalShowChinese)}
-            className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white px-4 py-2 rounded-xl font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-200 shadow-lg text-sm"
+            className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white px-3 py-2 rounded-lg font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-200 shadow-lg text-xs"
           >
             {internalShowChinese ? '🇺🇸 Switch to English' : '🇨🇳 切换到中文'}
           </button>
@@ -264,14 +264,14 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
                 onSpeak(textToSpeak);
               }}
               disabled={isSpeaking}
-              className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-3 py-2 rounded-lg font-semibold hover:from-green-600 hover:to-teal-700 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-xs"
             >
               {isSpeaking ? '🔊 Reading...' : (internalShowChinese ? '🔊 朗读故事' : '🔊 Read Story')}
             </button>
           )}
           <button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg text-sm"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg text-xs"
           >
             {showChinese ? '📸 继续拍照' : '📸 Continue Capturing'}
           </button>
