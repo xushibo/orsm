@@ -178,52 +178,52 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="flex-1 bg-gradient-to-br from-blue-50 to-purple-50 p-3 w-full h-full flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-blue-50 to-purple-50 p-6 w-full h-full flex flex-col">
         {/* 关闭按钮 */}
-        <div className="flex justify-end mb-1">
+        <div className="flex justify-end mb-4">
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center text-gray-600 transition-colors"
+            className="w-10 h-10 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center text-gray-600 transition-colors"
           >
             ✕
           </button>
         </div>
 
         {/* 成功图标 */}
-        <div className="text-center mb-2">
-          <div className="w-8 h-8 mx-auto bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-sm mb-1">
+        <div className="text-center mb-4">
+          <div className="w-12 h-12 mx-auto bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-xl mb-2">
             ✨
           </div>
-            <h2 className="text-sm font-bold text-gray-800">
+            <h2 className="text-lg font-bold text-gray-800">
               {showChinese ? '识别成功！' : 'Recognition Successful!'}
             </h2>
         </div>
 
         {/* 识别结果 - 突出显示 */}
-        <div className="mb-2">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-2 text-center">
+        <div className="mb-4">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-4 text-center">
             <div className="text-white text-xs mb-1 opacity-80">
               {showChinese ? '识别结果' : 'Recognition Result'}
             </div>
-            <div className={`text-white text-lg font-bold ${showChinese ? 'font-chinese' : ''}`}>
+            <div className={`text-white text-2xl font-bold ${showChinese ? 'font-chinese' : ''}`}>
               {showChinese ? (result.chineseName || getChineseTranslation(result.word)) : result.word}
             </div>
             {!showChinese && (result.chineseName || getChineseTranslation(result.word)) && (
-              <div className="text-white/80 text-xs mt-1 font-chinese">
+              <div className="text-white/80 text-sm mt-1 font-chinese">
                 {result.chineseName || getChineseTranslation(result.word)}
               </div>
             )}
           </div>
         </div>
 
-        {/* 故事内容 */}
-        <div className="flex-1 mb-2 min-h-0">
-          <div className="bg-white/80 rounded-lg p-2 border border-white/50 h-full">
-            <div className="text-gray-700 text-xs leading-relaxed text-left h-full flex flex-col">
-              <div className="font-semibold text-blue-600 mb-1 text-xs">
+        {/* 故事内容 - 只优化这个区域 */}
+        <div className="flex-1 mb-4 min-h-0">
+          <div className="bg-white/80 rounded-xl p-3 border border-white/50 h-full">
+            <div className="text-gray-700 text-sm leading-relaxed text-left h-full flex flex-col">
+              <div className="font-semibold text-blue-600 mb-2 text-sm">
                 {internalShowChinese ? '故事内容' : 'Story Content'}
               </div>
-              <div className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''} text-xs leading-tight`}>
+              <div className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''} text-sm`}>
                 {internalShowChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
               </div>
             </div>
