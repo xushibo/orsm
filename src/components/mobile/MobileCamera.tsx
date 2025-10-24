@@ -526,15 +526,17 @@ export function MobileCamera() {
       {/* 加载动画 */}
       {isProcessing && <LoadingSpinner />}
 
-      {/* 结果弹窗 */}
+      {/* 结果页面 - 全屏显示 */}
       {showResult && result && (
-        <MobileResultModal
-          result={result}
-          onClose={closeResult}
-          onSpeak={speakText}
-          isSpeaking={isSpeaking}
-          showChinese={isChinese}
-        />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 flex flex-col z-50">
+          <MobileResultModal
+            result={result}
+            onClose={closeResult}
+            onSpeak={speakText}
+            isSpeaking={isSpeaking}
+            showChinese={isChinese}
+          />
+        </div>
       )}
     </main>
   );

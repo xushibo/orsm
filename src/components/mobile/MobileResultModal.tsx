@@ -177,15 +177,17 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
   };
 
   return (
-    <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-40 p-4">
-      <div className="bg-gradient-to-br from-blue-50 to-purple-50 backdrop-blur-lg rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-white/30 relative">
+    <div className="w-full h-full flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-blue-50 to-purple-50 p-6 w-full h-full flex flex-col">
         {/* 关闭按钮 */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center text-gray-600 transition-colors"
-        >
-          ✕
-        </button>
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-full bg-white/30 hover:bg-white/40 flex items-center justify-center text-gray-600 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
 
         {/* 成功图标 */}
         <div className="text-center mb-4">
@@ -215,13 +217,13 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
         </div>
 
         {/* 故事内容 */}
-        <div className="mb-4">
-          <div className="bg-white/80 rounded-xl p-3 border border-white/50">
-            <div className="text-gray-700 text-sm leading-relaxed text-left">
-              <div className="font-semibold text-blue-600 mb-1">
+        <div className="flex-1 mb-4">
+          <div className="bg-white/80 rounded-xl p-4 border border-white/50 h-full">
+            <div className="text-gray-700 text-sm leading-relaxed text-left h-full flex flex-col">
+              <div className="font-semibold text-blue-600 mb-2">
                 {internalShowChinese ? '故事内容' : 'Story Content'}
               </div>
-              <div className={internalShowChinese ? 'font-chinese' : ''}>
+              <div className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''}`}>
                 {internalShowChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
               </div>
             </div>
