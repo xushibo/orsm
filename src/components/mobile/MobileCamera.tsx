@@ -472,17 +472,7 @@ export function MobileCamera() {
       {/* 未授权状态 */}
       {permissionState === 'prompt' && (
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center p-4">
-          {/* 语言切换按钮 */}
-          <div className="absolute top-4 right-4">
-            <button
-              onClick={toggleLanguage}
-              className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-white/30 transition-colors"
-            >
-              {isChinese ? '中文' : 'EN'}
-            </button>
-          </div>
-          
-          <div className="text-center">
+          <div className="text-center w-full max-w-sm">
             <div className="text-6xl mb-4">📷</div>
             <h1 className="text-2xl font-bold text-white mb-2">Story Machine</h1>
             <p className="text-white/80 mb-6">
@@ -491,6 +481,17 @@ export function MobileCamera() {
                 : 'Take a photo to identify objects and get AI-generated stories'
               }
             </p>
+            
+            {/* 语言切换按钮 - 与结果页面样式相同 */}
+            <div className="mb-4">
+              <button
+                onClick={toggleLanguage}
+                className="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white px-4 py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-pink-700 transition-all duration-200 shadow-lg text-sm"
+              >
+                {isChinese ? '🇺🇸 Switch to English' : '🇨🇳 切换到中文'}
+              </button>
+            </div>
+            
             <button
               onClick={requestCamera}
               className="bg-white text-blue-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition-colors"
