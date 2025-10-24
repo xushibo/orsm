@@ -446,15 +446,7 @@ export function MobileCamera() {
           <div className="absolute top-0 left-0 right-0 z-20 pt-safe">
             <div className="flex justify-between items-center px-4 py-2">
               <div className="text-white text-sm font-medium">📷 Photo Recognition</div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={toggleLanguage}
-                  className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium hover:bg-white/30 transition-colors"
-                >
-                  {isChinese ? '中文' : 'EN'}
-                </button>
-                <div className="text-white text-xs opacity-75">✅ Authorized</div>
-              </div>
+              <div className="text-white text-xs opacity-75">✅ Authorized</div>
             </div>
           </div>
 
@@ -469,7 +461,7 @@ export function MobileCamera() {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-white/80 text-center">
                   <div className="text-2xl mb-2">📸</div>
-                  <div className="text-sm">{isChinese ? '将物体放在框内' : 'Place object in frame'}</div>
+                  <div className="text-sm">Place object in frame</div>
                 </div>
               </div>
             </div>
@@ -480,6 +472,16 @@ export function MobileCamera() {
       {/* 未授权状态 */}
       {permissionState === 'prompt' && (
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-purple-900 flex items-center justify-center p-4">
+          {/* 语言切换按钮 */}
+          <div className="absolute top-4 right-4">
+            <button
+              onClick={toggleLanguage}
+              className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-white/30 transition-colors"
+            >
+              {isChinese ? '中文' : 'EN'}
+            </button>
+          </div>
+          
           <div className="text-center">
             <div className="text-6xl mb-4">📷</div>
             <h1 className="text-2xl font-bold text-white mb-2">Story Machine</h1>
@@ -504,20 +506,13 @@ export function MobileCamera() {
         <div className="absolute inset-0 bg-red-900 flex items-center justify-center p-4">
           <div className="text-center text-white">
             <div className="text-6xl mb-4">🚫</div>
-            <h2 className="text-2xl font-bold mb-2">
-              {isChinese ? '相机访问被拒绝' : 'Camera Access Denied'}
-            </h2>
-            <p className="mb-6">
-              {error || (isChinese 
-                ? '请在浏览器设置中允许相机访问' 
-                : 'Please allow camera access in your browser settings'
-              )}
-            </p>
+            <h2 className="text-2xl font-bold mb-2">Camera Access Denied</h2>
+            <p className="mb-6">{error || 'Please allow camera access in your browser settings'}</p>
             <button
               onClick={requestCamera}
               className="bg-white text-red-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition-colors"
             >
-              {isChinese ? '重试' : 'Retry'}
+              Retry
             </button>
           </div>
         </div>
