@@ -216,14 +216,14 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
           </div>
         </div>
 
-        {/* 故事内容 - 只优化这个区域 */}
+        {/* 故事内容 - 进一步缩小留白 */}
         <div className="flex-1 mb-4 min-h-0">
-          <div className="bg-white/80 rounded-xl p-3 border border-white/50 h-full">
-            <div className="text-gray-700 text-sm leading-relaxed text-left h-full flex flex-col">
-              <div className="font-semibold text-blue-600 mb-2 text-sm">
+          <div className="bg-white/80 rounded-lg p-2 border border-white/50 h-full">
+            <div className="text-gray-700 text-xs leading-tight text-left h-full flex flex-col">
+              <div className="font-semibold text-blue-600 mb-1 text-xs">
                 {internalShowChinese ? '故事内容' : 'Story Content'}
               </div>
-              <div className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''} text-sm`}>
+              <div className={`flex-1 overflow-y-auto ${internalShowChinese ? 'font-chinese' : ''} text-xs leading-tight`}>
                 {internalShowChinese ? cleanChineseText(result.chineseStory || getChineseStory(result.story)) : processStory(result.story)}
               </div>
             </div>
