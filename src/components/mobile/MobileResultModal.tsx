@@ -46,11 +46,17 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
       const maxScroll = scrollHeight - clientHeight;
       
       if (maxScroll > 0) {
+        // 检测Safari浏览器
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        
         // 计算滚动时间（基于文本长度，大约每100字符1秒）
         const textLength = internalShowChinese 
           ? (result.chineseStory || getChineseStory(result.story)).length
           : result.story.length;
-        const scrollDuration = Math.max(3000, (textLength / 100) * 1000); // 最少3秒
+        
+        // Safari滚动速度慢三分之二（乘以3）
+        const baseDuration = Math.max(3000, (textLength / 100) * 1000); // 最少3秒
+        const scrollDuration = isSafari ? baseDuration * 3 : baseDuration;
         
         const startTime = Date.now();
         
