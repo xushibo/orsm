@@ -12,12 +12,12 @@ async function generateChineseContent(objectName: string, env: Env): Promise<{ c
   const prompt = `请为3岁儿童生成关于"${objectName}"的中文内容。
 
 要求：
-1. 中文名称：提供准确的中文翻译
-2. 中文故事：生成一个简单、有趣的中文故事，适合3岁儿童
+1. 中文名称：只提供纯中文名称，不要拼音，不要英文
+2. 中文故事：生成一个简单、有趣的中文故事，适合3岁儿童，纯中文，不要英文
 
 请按以下格式回复：
-中文名称：[中文名称]
-中文故事：[适合3岁儿童的中文故事]`;
+中文名称：[纯中文名称]
+中文故事：[纯中文故事]`;
 
   try {
     const response = await env.AI.run('@cf/meta/llama-2-7b-chat-int8', {
@@ -42,6 +42,7 @@ async function generateChineseContent(objectName: string, env: Env): Promise<{ c
     let chineseStory = storyMatch ? storyMatch[1].trim() : getFallbackChineseStory(objectName);
     
     // 清理内容
+    chineseName = cleanChineseText(chineseName);
     chineseStory = cleanChineseText(chineseStory);
     
     return { chineseName, chineseStory };
@@ -110,7 +111,9 @@ function getFallbackChineseStory(objectName: string): string {
  * Clean Chinese text
  */
 function cleanChineseText(text: string): string {
-  // 移除拼音注释
+  if (!text) return text;
+  
+  // 移除拼音注释 (如: (diàn fēi qiú))
   text = text.replace(/\([^)]*[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ][^)]*\)/g, '');
   
   // 移除 "Note:" 开头的解释部分
@@ -118,6 +121,9 @@ function cleanChineseText(text: string): string {
   
   // 移除 "*" 开头的解释行
   text = text.replace(/\*[^\n]*\n?/g, '');
+  
+  // 移除英文内容（保留中文字符）
+  text = text.replace(/[a-zA-Z\s]+/g, '');
   
   // 移除多余的空白行
   text = text.replace(/\n\s*\n/g, '\n');

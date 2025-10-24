@@ -147,6 +147,8 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
 
   // 清理中文文本，移除拼音注释和解释
   const cleanChineseText = (text: string): string => {
+    if (!text) return text;
+    
     // 移除拼音注释 (如: (diàn fēi qiú))
     text = text.replace(/\([^)]*[a-zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ][^)]*\)/g, '');
     
@@ -155,6 +157,9 @@ export function MobileResultModal({ result, onClose, onSpeak, isSpeaking = false
     
     // 移除 "*" 开头的解释行
     text = text.replace(/\*[^\n]*\n?/g, '');
+    
+    // 移除英文内容（保留中文字符）
+    text = text.replace(/[a-zA-Z\s]+/g, '');
     
     // 移除多余的空白行
     text = text.replace(/\n\s*\n/g, '\n');
