@@ -158,12 +158,15 @@ async function processImageWithAI(imageFile: File, env: Env): Promise<ApiRespons
           };
         }
         
-        return {
+        const result = {
           word: aiResult.objectName,
           story: story,
           chineseName: chineseTranslation.chineseName,
           chineseStory: chineseTranslation.chineseStory
         };
+        
+        console.log('Final result:', result);
+        return result;
       } catch (storyError) {
         console.log('Story generation failed, using fallback:', storyError);
         return {
