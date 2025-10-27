@@ -2,6 +2,45 @@
 
 All notable changes to Story Machine will be documented in this file.
 
+## [6.0.1] - 2025-01-27
+
+### 🔍 Code Review Release
+
+#### Code Quality Assessment
+- **Comprehensive code review** completed for entire codebase
+- **Architecture analysis** of frontend (Next.js) and backend (Cloudflare Workers)
+- **Security and performance** evaluation conducted
+- **Test coverage analysis** performed (current: 8.85%)
+
+#### Key Findings
+- ✅ **Architecture Design**: 8/10 - Clear separation of concerns, good TypeScript usage
+- ✅ **User Experience**: 9/10 - Excellent child-friendly design with animations and emojis
+- ✅ **Browser Compatibility**: Strong Safari/iOS support with specialized handling
+- ⚠️ **Test Coverage**: 2/10 - Critical issue requiring immediate attention
+- ⚠️ **Security**: 5/10 - Basic measures in place, needs enhancement
+- ⚠️ **Performance**: 6/10 - Room for optimization
+
+#### Identified Issues
+- **Test Coverage**: Only 8.85% coverage, core components untested
+- **Component Size**: MobileCamera.tsx (580 lines) needs refactoring
+- **Security**: Missing rate limiting, input validation needs strengthening
+- **Performance**: No caching mechanism for AI results
+
+#### Recommendations for Next Release
+1. **Priority 1**: Increase test coverage to >80%
+2. **Priority 2**: Refactor large components into smaller, focused components
+3. **Priority 3**: Implement security enhancements (rate limiting, input validation)
+4. **Priority 4**: Add performance optimizations (caching, image compression)
+
+#### Technical Details
+- **Frontend**: Next.js 15.5.6 + React 19.1.0 + TypeScript
+- **Backend**: Cloudflare Workers with ResNet-50 + CLIP AI models
+- **Testing**: Jest framework with 28 tests (needs expansion)
+- **Deployment**: Cloudflare Pages + Workers
+- **Code Quality**: ESLint configured, TypeScript strict mode
+
+---
+
 ## [3.0.0] - 2025-10-23
 
 ### 🎉 Major Release - Production Ready
