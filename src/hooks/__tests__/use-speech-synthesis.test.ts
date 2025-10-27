@@ -106,6 +106,19 @@ describe('useSpeechSynthesis', () => {
   it('should stop speaking explicitly', () => {
     const { result } = renderHook(() => useSpeechSynthesis());
 
+    // Set speaking state to true first
+    act(() => {
+      result.current.speakText('Hello world');
+    });
+
+    act(() => {
+      if (mockUtterance.onstart) {
+        mockUtterance.onstart();
+      }
+    });
+
+    expect(result.current.isSpeaking).toBe(true);
+
     act(() => {
       result.current.stopSpeaking();
     });

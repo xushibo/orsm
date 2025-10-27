@@ -16,7 +16,7 @@ describe('CameraPermissionPrompt', () => {
     render(<CameraPermissionPrompt onRequestCamera={mockOnRequestCamera} />);
     
     expect(screen.getByText('🎭 Story Magic Camera 🎭')).toBeInTheDocument();
-    expect(screen.getByText('📸 Take a photo, create magic!')).toBeInTheDocument();
+    expect(screen.getByText(/📸 Take a photo, create magic!/)).toBeInTheDocument();
     expect(screen.getByText('🚀 Start Magic Journey!')).toBeInTheDocument();
   });
 
@@ -24,7 +24,7 @@ describe('CameraPermissionPrompt', () => {
     render(<CameraPermissionPrompt onRequestCamera={mockOnRequestCamera} isChinese={true} />);
     
     expect(screen.getByText('🎭 故事魔法相机 🎭')).toBeInTheDocument();
-    expect(screen.getByText('📸 拍一拍，变魔法！')).toBeInTheDocument();
+    expect(screen.getByText(/📸 拍一拍，变魔法！/)).toBeInTheDocument();
     expect(screen.getByText('🚀 开始魔法之旅！')).toBeInTheDocument();
   });
 
@@ -61,13 +61,19 @@ describe('CameraPermissionPrompt', () => {
     // Check for camera emoji
     expect(screen.getByText('📷')).toBeInTheDocument();
     
-    // Check for decorative stars
-    const stars = screen.getAllByText('✨');
-    expect(stars).toHaveLength(3);
+    // Check for decorative stars (there are 2 ✨ and 1 🌟)
+    const sparkles = screen.getAllByText('✨');
+    expect(sparkles).toHaveLength(2);
     
-    // Check for decorative balloons
+    const stars = screen.getAllByText('🌟');
+    expect(stars).toHaveLength(1);
+    
+    // Check for decorative balloons (there are 2 🎈 and 1 🎪)
     const balloons = screen.getAllByText('🎈');
-    expect(balloons).toHaveLength(3);
+    expect(balloons).toHaveLength(2);
+    
+    const circus = screen.getAllByText('🎪');
+    expect(circus).toHaveLength(1);
   });
 
   it('should have proper styling classes', () => {

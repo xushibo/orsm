@@ -41,9 +41,10 @@ describe('CameraOverlay', () => {
     // Check for overlay container
     expect(container.firstChild).toHaveClass('absolute', 'inset-0', 'pointer-events-none');
     
-    // Check for guide frame
-    const guideFrame = screen.getByText('Put your object here!').closest('div');
-    expect(guideFrame).toHaveClass('w-72', 'h-72', 'border-4', 'border-yellow-300', 'rounded-3xl');
+    // Check for guide frame - find the container with the guide text
+    const guideText = screen.getByText('Put your object here!');
+    const guideContainer = guideText.closest('.w-72');
+    expect(guideContainer).toHaveClass('w-72', 'h-72', 'border-4', 'border-yellow-300', 'rounded-3xl');
     
     // Check for animated elements
     expect(screen.getByText('📸')).toHaveClass('animate-bounce');
